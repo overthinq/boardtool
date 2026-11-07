@@ -2,7 +2,7 @@
 
 A prototyping environment where an AI agent works only on a design system, its components and HTML boards, while a separate tool, which the agent never sees, provides navigation and an overview of the whole app. Prototypes are made of the same material as the final product, at a fraction of the token cost of an agent reading a canvas.
 
-**Status:** phase 1 of 8 (bootstrap). Structure and rules only; the server is not implemented yet. Spec: [`docs/spec.md`](docs/spec.md).
+**Status:** phase 3 of 8 (index). Pages and live board previews in the browser; tokens, components, board metadata and lint come in the next phases. Spec: [`docs/spec.md`](docs/spec.md).
 
 ## Requirements
 
@@ -12,7 +12,7 @@ Node 20+. No `npm install`, no build step.
 
 | Task | How |
 | --- | --- |
-| Start the tool *(phase 2, not yet available)* | `node app/server.js` |
+| Start the tool | `node app/server.js`, then open `http://127.0.0.1:4800/__app/` |
 | Prototyping session | Start the agent in `project/` |
 | Tool development session | Start the agent at the repository root and have it read `app/AGENTS.md` first |
 | Lint a board *(phase 8, not yet available)* | `node ../app/lint.js boards/<page>/<file>` from `project/` |
