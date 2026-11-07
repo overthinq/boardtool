@@ -87,10 +87,15 @@ function row(token) {
     const reason = token.deprecated === true ? "" : `: ${token.deprecated}`;
     about.append(note("deprecated", `Deprecated${reason}`));
   }
-  const value = el("td", {}, el("code", { textContent: main.value }));
+  const isColor = token.type === "color";
+  const shown = isColor ? hex(main.value) : readable(main.value);
+  const value = el("td", {}, el("code", { textContent: shown }));
+  if (isColor && !main.value.startsWith("color(srgb ")) {
+    value.append(note("muted", main.value));
+  }
   for (const extra of extras) {
     const property = extra.name.slice(token.name.length + 1);
-    const text = `${property}: ${extra.value}`;
+    const text = `${property}: ${readable(extra.value)}`;
     value.append(el("p", {}, el("code", { textContent: text })));
   }
   const relations = el("td");
@@ -132,6 +137,17 @@ function toRgb(color) {
   const [r, g, b, a] = canvas.getImageData(0, 0, 1, 1).data;
   return { rgb: [r, g, b], alpha: a / 255 };
 }
+
+function hex(color) {
+  const { rgb, alpha } = toRgb(color);
+  const channels = alpha < 1 ? [...rgb, Math.round(alpha * 255)] : rgb;
+  return "#" + channels.map((c) => c.toString(16).padStart(2, "0")).join("");
+}
+
+// sRGB colors read as hex. Colors in other spaces keep their notation, which
+// a hex could only approximate.
+const SRGB = /color\(srgb [^)]*\)/g;
+const readable = (css) => css.replace(SRGB, hex);
 
 // WCAG 2 relative luminance.
 function luminance(rgb) {
