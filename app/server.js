@@ -1,14 +1,16 @@
 import { createServer, STATUS_CODES } from "node:http";
 import { watch } from "node:fs";
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildTokens, catalogTokens, TIERS, toCss } from "./lib/dtcg.js";
 
 const PORT = 4800;
 const APP = dirname(fileURLToPath(import.meta.url));
 const UI = join(APP, "ui");
 const PROJECT = resolve(APP, "../project");
 const BOARDS = join(PROJECT, "boards");
+const DS = join(PROJECT, "ds");
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -118,6 +120,49 @@ async function handle(req, res) {
   return serveFile(res, PROJECT, path);
 }
 
+async function readTokenFiles() {
+  const files = [];
+  for (const tier of TIERS) {
+    const dir = join(DS, "tokens", tier);
+    const names = (await readdir(dir)).filter((name) =>
+      name.endsWith(".tokens.json"),
+    );
+    for (const name of names.sort()) {
+      const text = await readFile(join(dir, name), "utf8");
+      try {
+        files.push({ tier, name: `${tier}/${name}`, json: JSON.parse(text) });
+      } catch (err) {
+        throw new Error(`${tier}/${name}: ${err.message}`);
+      }
+    }
+  }
+  return files;
+}
+
+// Skipping identical writes avoids a reload of every board for nothing.
+async function writeIfChanged(file, content) {
+  const current = await readFile(file, "utf8").catch(() => null);
+  if (current !== content) await writeFile(file, content);
+}
+
+async function generateTokens() {
+  try {
+    const tokens = buildTokens(await readTokenFiles());
+    const catalog = [
+      "# Catalog (generated, do not edit)",
+      "",
+      "## Tokens",
+      ...catalogTokens(tokens),
+      "",
+    ];
+    await writeIfChanged(join(DS, "tokens.css"), toCss(tokens));
+    await writeIfChanged(join(DS, "catalog.md"), catalog.join("\n"));
+  } catch (err) {
+    // The last generated files stay until the token files are valid again.
+    console.error(`Tokens not generated. ${err.message}`);
+  }
+}
+
 createServer((req, res) =>
   handle(req, res).catch((err) => {
     if (res.headersSent) return res.destroy();
@@ -133,7 +178,12 @@ function notify(filename) {
   const [area, ...segments] = filename.split(sep);
   if (segments.some((segment) => segment.startsWith("."))) return;
   const path = segments.join("/");
-  if (area === "ds") send("ds", path);
+  if (area === "ds") {
+    // Token files reach the boards through tokens.css: rewriting it sends
+    // the event.
+    if (segments[0] === "tokens") generateTokens();
+    else if (path !== "catalog.md") send("ds", path);
+  }
   // Pages have no extension: a board event also covers added or removed
   // pages, so the index can refresh its tree.
   const isBoard =
@@ -156,3 +206,5 @@ watch(PROJECT, { recursive: true }, (_, filename) => {
     }, 50),
   );
 });
+
+generateTokens();
