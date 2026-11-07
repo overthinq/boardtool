@@ -21,17 +21,22 @@ import {
   buildTokens,
   catalogTokens,
   describeTokens,
-  TIERS,
   toCss,
 } from "./lib/dtcg.js";
-import { catalogComponent, parseComponent } from "./lib/jsdoc.js";
+import { catalogComponent } from "./lib/jsdoc.js";
+import {
+  byName,
+  DS,
+  isListed,
+  PROJECT,
+  readComponents,
+  readTokenFiles,
+} from "./sources.js";
 
 const PORT = 4800;
 const APP = dirname(fileURLToPath(import.meta.url));
 const UI = join(APP, "ui");
-const PROJECT = resolve(APP, "../project");
 const BOARDS = join(PROJECT, "boards");
-const DS = join(PROJECT, "ds");
 const BOARD_DATA = join(PROJECT, "board.json");
 const HOSTS = [`127.0.0.1:${PORT}`, `localhost:${PORT}`];
 const DEFAULT_BOARD_DATA = {
@@ -84,8 +89,6 @@ function reply(
   res.end(body);
 }
 
-const byName = (a, b) => a.name.localeCompare(b.name, "en", { numeric: true });
-const isListed = (entry) => !/^[._]/.test(entry.name);
 
 // "01-monitoring" → "Monitoring", "02-alarm-list.html" → "Alarm list"
 function label(name) {
@@ -278,24 +281,6 @@ async function handle(req, res) {
   return serveFile(res, PROJECT, path);
 }
 
-async function readTokenFiles() {
-  const files = [];
-  for (const tier of TIERS) {
-    const dir = join(DS, "tokens", tier);
-    const names = (await readdir(dir)).filter((name) =>
-      name.endsWith(".tokens.json"),
-    );
-    for (const name of names.sort()) {
-      const text = await readFile(join(dir, name), "utf8");
-      try {
-        files.push({ tier, name: `${tier}/${name}`, json: JSON.parse(text) });
-      } catch (err) {
-        throw new Error(`${tier}/${name}: ${err.message}`);
-      }
-    }
-  }
-  return files;
-}
 
 // Skipping identical writes avoids a reload of every board for nothing.
 async function writeIfChanged(file, content) {
@@ -303,26 +288,6 @@ async function writeIfChanged(file, content) {
   if (current !== content) await writeFile(file, content);
 }
 
-// One folder per component: <name>/<name>.js with the JSDoc, <name>.md with
-// the guidelines.
-async function readComponents() {
-  const dir = join(DS, "components");
-  const entries = await readdir(dir, { withFileTypes: true });
-  const folders = entries
-    .filter((entry) => entry.isDirectory() && isListed(entry))
-    .sort(byName);
-  return Promise.all(
-    folders.map(async ({ name }) => {
-      const read = (extension) =>
-        readFile(join(dir, name, `${name}.${extension}`), "utf8").catch(
-          () => "",
-        );
-      const api = parseComponent(await read("js"));
-      const error = api ? null : `${name}/${name}.js has no JSDoc @element`;
-      return { folder: name, ...api, guide: await read("md"), error };
-    }),
-  );
-}
 
 function catalog() {
   return [

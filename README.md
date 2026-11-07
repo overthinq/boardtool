@@ -2,7 +2,7 @@
 
 A prototyping environment where an AI agent works only on a design system, its components and HTML boards, while a separate tool, which the agent never sees, provides navigation and an overview of the whole app. Prototypes are made of the same material as the final product, at a fraction of the token cost of an agent reading a canvas.
 
-**Status:** phase 7 of 8 (board metadata). Pages and live board previews in the browser, with notes, tags, frame sizes and moves between pages; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. The lint comes in the next phase.
+**Status:** MVP complete (8 of 8 phases). Pages and live board previews in the browser, with notes, tags, frame sizes and moves between pages; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. A lint checks boards against the design system rules.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ Node 20+. No `npm install`, no build step.
 | Start the tool | `node app/server.js`, then open `http://127.0.0.1:4800/__app/` |
 | Prototyping session | Start the agent in `project/` |
 | Tool development session | Start the agent at the repository root and have it read `app/AGENTS.md` first |
-| Lint a board *(phase 8, not yet available)* | `node ../app/lint.js boards/<page>/<file>` from `project/` |
+| Lint a board | `node ../app/lint.js boards/<page>/<file>` from `project/` |
 
 ## Structure
 
