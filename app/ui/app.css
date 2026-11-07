@@ -129,6 +129,141 @@ main {
   transform-origin: 0 0;
 }
 
+nav a.drop-target {
+  outline: 2px dashed var(--focus);
+  outline-offset: -2px;
+}
+
+button {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--sidebar);
+  color: inherit;
+  font: inherit;
+}
+
+button:hover {
+  background: var(--selected);
+}
+
+button[aria-pressed="true"] {
+  border-color: var(--text);
+  background: var(--selected);
+}
+
+#status,
+#orphans {
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid var(--danger);
+  border-radius: 4px;
+}
+
+#orphans li + li {
+  margin-top: 8px;
+}
+
+#toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+#filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 16px;
+}
+
+.board p {
+  max-width: 320px;
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+
+.board p:empty {
+  display: none;
+}
+
+.board .edit {
+  position: relative;
+  margin-top: 8px;
+}
+
+dialog {
+  width: min(480px, calc(100vw - 32px));
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--sidebar);
+  color: var(--text);
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+dialog h2 {
+  margin-bottom: 16px;
+}
+
+dialog form > label,
+fieldset {
+  display: block;
+  margin: 0 0 16px;
+}
+
+fieldset {
+  padding: 8px 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+fieldset label {
+  margin-right: 12px;
+}
+
+dialog input,
+dialog textarea,
+dialog select {
+  font: inherit;
+}
+
+dialog textarea {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  box-sizing: border-box;
+}
+
+dialog input[type="number"] {
+  width: 6em;
+}
+
+.tag-list {
+  margin-bottom: 12px;
+}
+
+.tag-list li + li {
+  margin-top: 8px;
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}
+
 /* Design system viewer */
 
 section + section {

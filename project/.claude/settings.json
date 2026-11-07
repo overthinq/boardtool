@@ -3,7 +3,8 @@
     "allow": ["Bash(node ../app/lint.js *)"],
     "deny": [
       "Edit(./ds/tokens.css)",
-      "Edit(./ds/catalog.md)"
+      "Edit(./ds/catalog.md)",
+      "Edit(./board.json)"
     ]
   }
 }

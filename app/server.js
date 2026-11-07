@@ -1,7 +1,21 @@
 import { createServer, STATUS_CODES } from "node:http";
 import { watch } from "node:fs";
-import { readdir, readFile, stat, writeFile } from "node:fs/promises";
-import { dirname, extname, join, resolve, sep } from "node:path";
+import {
+  readdir,
+  readFile,
+  rename,
+  stat,
+  writeFile,
+} from "node:fs/promises";
+import {
+  basename,
+  dirname,
+  extname,
+  join,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   buildTokens,
@@ -18,6 +32,18 @@ const UI = join(APP, "ui");
 const PROJECT = resolve(APP, "../project");
 const BOARDS = join(PROJECT, "boards");
 const DS = join(PROJECT, "ds");
+const BOARD_DATA = join(PROJECT, "board.json");
+const HOSTS = [`127.0.0.1:${PORT}`, `localhost:${PORT}`];
+const DEFAULT_BOARD_DATA = {
+  version: 1,
+  tags: [
+    { id: "draft", label: "Draft" },
+    { id: "review", label: "In review" },
+    { id: "approved", label: "Approved" },
+  ],
+  pages: {},
+  boards: {},
+};
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -35,6 +61,13 @@ const TYPES = {
 const clients = new Set();
 // The viewer shows the last valid tokens, plus the error of a later failure.
 const designSystem = { tokens: [], tokenError: null, components: [] };
+
+class RequestError extends Error {
+  constructor(status, message = STATUS_CODES[status]) {
+    super(message);
+    this.status = status;
+  }
+}
 
 function send(event, data) {
   for (const res of clients) res.write(`event: ${event}\ndata: ${data}\n\n`);
@@ -115,11 +148,124 @@ async function serveFile(res, root, path) {
   }
 }
 
+async function readBoardData() {
+  try {
+    return JSON.parse(await readFile(BOARD_DATA, "utf8"));
+  } catch (err) {
+    if (err.code === "ENOENT") return structuredClone(DEFAULT_BOARD_DATA);
+    throw err;
+  }
+}
+
+// Through a temporary file, so a crash never leaves half a board.json.
+async function writeBoardData(data) {
+  const temporary = join(PROJECT, ".board.json.tmp");
+  await writeFile(temporary, `${JSON.stringify(data, null, 2)}\n`);
+  await rename(temporary, BOARD_DATA);
+  send("metadata", "board.json");
+}
+
+const isRecord = (value) =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+const isStrings = (value) =>
+  Array.isArray(value) && value.every((item) => typeof item === "string");
+const isFrame = (frame) =>
+  frame === undefined ||
+  (Number.isInteger(frame?.width) &&
+    Number.isInteger(frame?.height) &&
+    frame.width > 0 &&
+    frame.height > 0);
+const isTag = (tag) =>
+  typeof tag?.id === "string" && typeof tag?.label === "string";
+const isBoard = (board) =>
+  isRecord(board) &&
+  isFrame(board.frame) &&
+  (board.tags === undefined || isStrings(board.tags)) &&
+  (board.note === undefined || typeof board.note === "string");
+
+function checkBoardData(data) {
+  const isValid =
+    isRecord(data) &&
+    data.version === 1 &&
+    Array.isArray(data.tags) &&
+    data.tags.every(isTag) &&
+    isRecord(data.pages) &&
+    Object.values(data.pages).every((page) => isFrame(page?.frame)) &&
+    isRecord(data.boards) &&
+    Object.values(data.boards).every(isBoard);
+  if (!isValid) throw new RequestError(400, "Invalid board data");
+}
+
+async function readJson(req) {
+  // A JSON body makes browsers ask before sending a request from another site.
+  const type = req.headers["content-type"]?.split(";")[0].trim();
+  if (type !== "application/json") throw new RequestError(415);
+  let body = "";
+  for await (const chunk of req) {
+    body += chunk;
+    if (body.length > 1_000_000) throw new RequestError(413);
+  }
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw new RequestError(400, "Invalid JSON");
+  }
+}
+
+const exists = (path) => stat(path).then(() => true, () => false);
+
+// The only write to boards/: a board file moves to another page, and its
+// metadata moves with it.
+async function moveBoard({ from, to }) {
+  if (typeof from !== "string" || typeof to !== "string") {
+    throw new RequestError(400);
+  }
+  const source = resolve(BOARDS, from);
+  const page = resolve(BOARDS, to);
+  const target = join(page, basename(source));
+  if (
+    dirname(dirname(source)) !== BOARDS ||
+    dirname(page) !== BOARDS ||
+    extname(source) !== ".html"
+  ) {
+    throw new RequestError(400, "Expected a board and a page in boards/");
+  }
+  if (!(await exists(source))) throw new RequestError(404, `No board ${from}`);
+  // rename() would silently replace a board with the same name.
+  if (await exists(target)) {
+    throw new RequestError(409, `${to} already has ${basename(source)}`);
+  }
+  await rename(source, target);
+  const data = await readBoardData();
+  if (!Object.hasOwn(data.boards, from)) return;
+  const moved = relative(BOARDS, target).split(sep).join("/");
+  data.boards[moved] = data.boards[from];
+  delete data.boards[from];
+  await writeBoardData(data);
+}
+
 async function handle(req, res) {
-  if (req.method !== "GET" && req.method !== "HEAD") return reply(res, 405);
+  // Pages from other sites can reach 127.0.0.1 through DNS rebinding, but
+  // they keep their own host name.
+  if (!HOSTS.includes(req.headers.host)) return reply(res, 403);
   const url = new URL(req.url, "http://localhost");
   const path = decodeURIComponent(url.pathname);
+  if (path === "/__api/board" && req.method === "PUT") {
+    const data = await readJson(req);
+    checkBoardData(data);
+    await writeBoardData(data);
+    return reply(res, 204, "");
+  }
+  if (path === "/__api/move" && req.method === "POST") {
+    await moveBoard(await readJson(req));
+    return reply(res, 204, "");
+  }
+  if (req.method !== "GET" && req.method !== "HEAD") return reply(res, 405);
   if (path === "/__api/events") return subscribe(req, res);
+  if (path === "/__api/board") {
+    const data = await readBoardData();
+    return reply(res, 200, JSON.stringify(data), TYPES[".json"]);
+  }
   if (path === "/__api/tree") {
     return reply(res, 200, JSON.stringify(await tree()), TYPES[".json"]);
   }
@@ -216,6 +362,7 @@ async function generateDesignSystem() {
 createServer((req, res) =>
   handle(req, res).catch((err) => {
     if (res.headersSent) return res.destroy();
+    if (err instanceof RequestError) return reply(res, err.status, err.message);
     if (err instanceof URIError) return reply(res, 400);
     console.error(err);
     reply(res, 500);

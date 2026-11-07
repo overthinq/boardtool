@@ -15,14 +15,68 @@
     <ul id="pages"></ul>
   </nav>
   <main>
+    <p id="status" role="alert" hidden></p>
+    <ul id="orphans" hidden></ul>
+    <div id="toolbar" hidden>
+      <span id="page-frame"></span>
+      <button type="button" id="edit-page">Edit frame</button>
+      <div id="filter" role="group" aria-label="Filter by tag"></div>
+      <button type="button" id="edit-tags">Tags</button>
+    </div>
     <p id="empty" hidden>No boards yet. Add HTML files to <code>project/boards/&lt;page&gt;/</code>.</p>
     <ul id="boards"></ul>
   </main>
   <template id="board">
-    <li class="board">
+    <li class="board" draggable="true">
       <div class="preview"><iframe loading="lazy" inert></iframe></div>
       <a></a>
+      <p class="tags"></p>
+      <p class="note"></p>
+      <button type="button" class="edit">Edit</button>
     </li>
   </template>
+  <dialog id="board-dialog">
+    <form method="dialog">
+      <h2></h2>
+      <fieldset>
+        <legend>Tags</legend>
+        <div class="tag-choices"></div>
+      </fieldset>
+      <label>Note <textarea name="note" rows="3"></textarea></label>
+      <fieldset>
+        <legend>Frame</legend>
+        <label>Width <input name="width" type="number" min="1" step="1"></label>
+        <label>Height <input name="height" type="number" min="1" step="1"></label>
+        <p class="hint">Empty fields use the page frame.</p>
+      </fieldset>
+      <label>Page <select name="page"></select></label>
+      <div class="actions">
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="page-dialog">
+    <form method="dialog">
+      <h2></h2>
+      <label>Width <input name="width" type="number" min="1" step="1" required></label>
+      <label>Height <input name="height" type="number" min="1" step="1" required></label>
+      <div class="actions">
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="tags-dialog">
+    <form method="dialog">
+      <h2>Tags</h2>
+      <ul class="tag-list"></ul>
+      <button type="button" class="add-tag">Add tag</button>
+      <div class="actions">
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
 </body>
 </html>

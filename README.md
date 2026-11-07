@@ -2,7 +2,7 @@
 
 A prototyping environment where an AI agent works only on a design system, its components and HTML boards, while a separate tool, which the agent never sees, provides navigation and an overview of the whole app. Prototypes are made of the same material as the final product, at a fraction of the token cost of an agent reading a canvas.
 
-**Status:** phase 6 of 8 (components). Pages and live board previews in the browser; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. Board metadata and lint come in the next phases.
+**Status:** phase 7 of 8 (board metadata). Pages and live board previews in the browser, with notes, tags, frame sizes and moves between pages; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. The lint comes in the next phase.
 
 ## Requirements
 
@@ -21,8 +21,9 @@ Node 20+. No `npm install`, no build step.
 
 | Path | Content |
 | --- | --- |
-| `app/` | The tool: server, lint, `lib/` shared with the browser, `ui/`, `data/board.json` |
+| `app/` | The tool: server, lint, `lib/` shared with the browser, `ui/` |
 | `project/` | The work of one project: server root and folder where prototyping sessions start |
+| `project/board.json` | Notes, tags and frame sizes of the boards; written by the tool |
 | `project/ds/tokens/` | DTCG tokens: `primitive/`, `semantic/`, `component/` |
 | `project/ds/components/` | Custom Elements, one folder each: `<name>.js`, `<name>.css`, `<name>.md` |
 | `project/ds/tokens.css`, `catalog.md` | Generated |
