@@ -10,11 +10,11 @@ Node 20+. No `npm install`, no build step.
 
 ## Usage
 
-| Task | Command |
+| Task | How |
 | --- | --- |
 | Start the tool *(phase 2, not yet available)* | `node app/server.js` |
-| Prototyping session | `cd project && claude` |
-| Tool development session | `claude` from the repository root |
+| Prototyping session | Start the agent in `project/` |
+| Tool development session | Start the agent at the repository root and have it read `app/AGENTS.md` first |
 | Lint a board *(phase 8, not yet available)* | `node ../app/lint.js boards/<page>/<file>` from `project/` |
 
 ## Structure
