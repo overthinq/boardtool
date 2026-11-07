@@ -7,6 +7,7 @@
   --border: light-dark(#dcdcdc, #3d3d3d);
   --selected: light-dark(#e6e6e6, #3a3a3a);
   --focus: light-dark(#0b57d0, #8ab4f8);
+  --danger: light-dark(#b3261e, #f2b8b5);
   font: 14px/1.4 system-ui, sans-serif;
 }
 
@@ -51,6 +52,16 @@ nav a {
 nav a:hover,
 nav a[aria-current="page"] {
   background: var(--selected);
+}
+
+nav ul ul {
+  padding-left: 12px;
+}
+
+hr {
+  margin: 8px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
 }
 
 main {
@@ -116,4 +127,160 @@ main {
   border: 0;
   transform: scale(var(--scale));
   transform-origin: 0 0;
+}
+
+/* Design system viewer */
+
+section + section {
+  margin-top: 48px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+h3 {
+  margin: 32px 0 8px;
+  font-size: 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.tokens {
+  table-layout: fixed;
+}
+
+th,
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+td p {
+  margin: 4px 0 0;
+}
+
+.tokens th:first-child {
+  width: 200px;
+}
+
+.tokens th:nth-child(2),
+.tokens th:nth-child(3) {
+  width: 30%;
+}
+
+.tokens td {
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.deprecated,
+.fail {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+#error {
+  margin: 0 0 24px;
+  padding: 12px;
+  border: 1px solid var(--danger);
+  border-radius: 4px;
+}
+
+.swatch {
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.swatch-color,
+.sample {
+  border: 1px solid var(--border);
+}
+
+.swatch-color {
+  width: 48px;
+  height: 32px;
+}
+
+.swatch-dimension {
+  height: 8px;
+  background: var(--text-muted);
+}
+
+/* Like the board previews: what a board shows without its own background. */
+.swatch-shadow,
+.swatch-border,
+.swatch-gradient {
+  width: 64px;
+  height: 40px;
+  background: #ffffff;
+}
+
+.swatch-gradient {
+  width: 160px;
+}
+
+.swatch-strokeStyle {
+  width: 160px;
+  border-top: 2px solid var(--text);
+}
+
+.swatch-duration,
+.swatch-cubicBezier,
+.swatch-transition {
+  width: 160px;
+}
+
+.swatch-duration::after,
+.swatch-cubicBezier::after,
+.swatch-transition::after {
+  content: "";
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  animation: slide var(--motion) infinite alternate;
+}
+
+@keyframes slide {
+  to {
+    transform: translateX(148px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swatch-duration::after,
+  .swatch-cubicBezier::after,
+  .swatch-transition::after {
+    animation: none;
+  }
+}
+
+.sample {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
 }

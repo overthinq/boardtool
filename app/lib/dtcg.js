@@ -462,10 +462,9 @@ const FORMATS = {
   },
 };
 
-function declarations(token, index) {
-  const ctx = { index, where: token.path, references: token.references };
+function declarations(token, ctx) {
   const result = [[token.name, format(token.value, token.type, ctx)]];
-  const alias = resolve(token.value, ctx).token;
+  const { alias } = token;
   const value = concrete(token.value, ctx);
   if (token.type === "typography") {
     result.push([
@@ -524,7 +523,11 @@ export function buildTokens(files) {
   flatten(root, [], { deprecated: false }, tiers, tokens);
   const index = new Map(tokens.map((token) => [token.path, token]));
   for (const token of tokens) resolveType(token, index);
-  for (const token of tokens) token.declarations = declarations(token, index);
+  for (const token of tokens) {
+    const ctx = { index, where: token.path, references: token.references };
+    token.alias = resolve(token.value, ctx).token ?? null;
+    token.declarations = declarations(token, ctx);
+  }
   checkCycles(tokens);
   checkNames(tokens);
   return tokens.sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier));
@@ -557,4 +560,36 @@ export function catalogTokens(tokens) {
   return [...groups].map(
     ([prefix, names]) => `- ${prefix.slice(2)}: ${names.join(", ")}`,
   );
+}
+
+// Plain data for the token viewer: final CSS values, alias chains, usages.
+export function describeTokens(tokens) {
+  const values = new Map(tokens.flatMap((token) => token.declarations));
+  const resolveVars = (css) =>
+    css.replace(/var\((--[^)]+)\)/g, (_, name) =>
+      resolveVars(values.get(name)),
+    );
+  const usedBy = new Map(tokens.map((token) => [token, []]));
+  for (const token of tokens) {
+    for (const target of token.references) usedBy.get(target).push(token.name);
+  }
+  return tokens.map((token) => {
+    const chain = [];
+    for (let link = token.alias; link; link = link.alias) chain.push(link.name);
+    return {
+      path: token.path,
+      name: token.name,
+      tier: token.tier,
+      type: token.type,
+      description: token.description,
+      deprecated: token.deprecated,
+      declarations: token.declarations.map(([name, css]) => ({
+        name,
+        value: resolveVars(css),
+      })),
+      chain,
+      references: [...token.references].map((target) => target.name),
+      usedBy: usedBy.get(token),
+    };
+  });
 }

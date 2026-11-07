@@ -3,7 +3,13 @@ import { watch } from "node:fs";
 import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildTokens, catalogTokens, TIERS, toCss } from "./lib/dtcg.js";
+import {
+  buildTokens,
+  catalogTokens,
+  describeTokens,
+  TIERS,
+  toCss,
+} from "./lib/dtcg.js";
 
 const PORT = 4800;
 const APP = dirname(fileURLToPath(import.meta.url));
@@ -26,6 +32,8 @@ const TYPES = {
 };
 
 const clients = new Set();
+// The viewer shows the last valid tokens, plus the error of a later failure.
+const designSystem = { tokens: [], error: null };
 
 function send(event, data) {
   for (const res of clients) res.write(`event: ${event}\ndata: ${data}\n\n`);
@@ -114,6 +122,9 @@ async function handle(req, res) {
   if (path === "/__api/tree") {
     return reply(res, 200, JSON.stringify(await tree()), TYPES[".json"]);
   }
+  if (path === "/__api/ds") {
+    return reply(res, 200, JSON.stringify(designSystem), TYPES[".json"]);
+  }
   if (path.startsWith("/__app/")) {
     return serveFile(res, UI, path.slice("/__app".length));
   }
@@ -157,10 +168,14 @@ async function generateTokens() {
     ];
     await writeIfChanged(join(DS, "tokens.css"), toCss(tokens));
     await writeIfChanged(join(DS, "catalog.md"), catalog.join("\n"));
+    designSystem.tokens = describeTokens(tokens);
+    designSystem.error = null;
   } catch (err) {
     // The last generated files stay until the token files are valid again.
     console.error(`Tokens not generated. ${err.message}`);
+    designSystem.error = err.message;
   }
+  send("tokens", designSystem.error ? "error" : "ok");
 }
 
 createServer((req, res) =>
