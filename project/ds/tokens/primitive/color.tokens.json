@@ -1,0 +1,109 @@
+{
+  "color": {
+    "$type": "color",
+    "gray": {
+      "0": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "hex": "#ffffff"
+        },
+        "$description": "White"
+      },
+      "50": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.9686,
+            0.9686,
+            0.9686
+          ],
+          "hex": "#f7f7f7"
+        },
+        "$description": "Lightest gray"
+      },
+      "200": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.8706,
+            0.8706,
+            0.8706
+          ],
+          "hex": "#dedede"
+        },
+        "$description": "Light gray, for borders"
+      },
+      "600": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.3686,
+            0.3686,
+            0.3686
+          ],
+          "hex": "#5e5e5e"
+        },
+        "$description": "Mid gray, for secondary text"
+      },
+      "900": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.102,
+            0.102,
+            0.102
+          ],
+          "hex": "#1a1a1a"
+        },
+        "$description": "Near black, for primary text"
+      }
+    },
+    "green": {
+      "700": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.1216,
+            0.4784,
+            0.2275
+          ],
+          "hex": "#1f7a3a"
+        },
+        "$description": "Green for positive states"
+      }
+    },
+    "amber": {
+      "700": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.6039,
+            0.3843,
+            0.0
+          ],
+          "hex": "#9a6200"
+        },
+        "$description": "Amber for warnings"
+      }
+    },
+    "red": {
+      "700": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.7765,
+            0.1569,
+            0.1569
+          ],
+          "hex": "#c62828"
+        },
+        "$description": "Red for alarms"
+      }
+    }
+  }
+}

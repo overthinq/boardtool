@@ -1,0 +1,42 @@
+{
+  "space": {
+    "1": {
+      "$value": "{size.4}",
+      "$description": "Tightest gap"
+    },
+    "2": {
+      "$value": "{size.8}",
+      "$description": "Gap between related items"
+    },
+    "3": {
+      "$value": "{size.12}",
+      "$description": "Inner padding of small elements"
+    },
+    "4": {
+      "$value": "{size.16}",
+      "$description": "Default padding"
+    },
+    "6": {
+      "$value": "{size.24}",
+      "$description": "Gap between groups"
+    },
+    "8": {
+      "$value": "{size.32}",
+      "$description": "Gap between sections"
+    }
+  },
+  "radius": {
+    "sm": {
+      "$value": "{size.4}",
+      "$description": "Small elements"
+    },
+    "md": {
+      "$value": "{size.8}",
+      "$description": "Cards and panels"
+    },
+    "pill": {
+      "$value": "{size.full}",
+      "$description": "Fully rounded ends"
+    }
+  }
+}

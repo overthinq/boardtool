@@ -1,0 +1,48 @@
+{
+  "font": {
+    "body": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font-family.sans}",
+        "fontSize": "{font-size.16}",
+        "fontWeight": "{font-weight.regular}",
+        "letterSpacing": "{letter-spacing.none}",
+        "lineHeight": "{line-height.normal}"
+      },
+      "$description": "Running text"
+    },
+    "label": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font-family.sans}",
+        "fontSize": "{font-size.14}",
+        "fontWeight": "{font-weight.semibold}",
+        "letterSpacing": "{letter-spacing.none}",
+        "lineHeight": "{line-height.tight}"
+      },
+      "$description": "Labels and controls"
+    },
+    "heading-sm": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font-family.sans}",
+        "fontSize": "{font-size.20}",
+        "fontWeight": "{font-weight.semibold}",
+        "letterSpacing": "{letter-spacing.none}",
+        "lineHeight": "{line-height.tight}"
+      },
+      "$description": "Small headings"
+    },
+    "heading-md": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font-family.sans}",
+        "fontSize": "{font-size.24}",
+        "fontWeight": "{font-weight.semibold}",
+        "letterSpacing": "{letter-spacing.none}",
+        "lineHeight": "{line-height.tight}"
+      },
+      "$description": "Medium headings"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "color": {
+    "surface": {
+      "base": {
+        "$value": "{color.gray.0}",
+        "$description": "Page background"
+      },
+      "raised": {
+        "$value": "{color.gray.50}",
+        "$description": "Cards and panels on the page"
+      }
+    },
+    "text": {
+      "primary": {
+        "$value": "{color.gray.900}",
+        "$description": "Main text"
+      },
+      "muted": {
+        "$value": "{color.gray.600}",
+        "$description": "Secondary text"
+      }
+    },
+    "border": {
+      "default": {
+        "$value": "{color.gray.200}",
+        "$description": "Dividers and outlines"
+      }
+    },
+    "status": {
+      "ok": {
+        "$value": "{color.green.700}",
+        "$description": "Normal operation"
+      },
+      "warning": {
+        "$value": "{color.amber.700}",
+        "$description": "Needs attention"
+      },
+      "alarm": {
+        "$value": "{color.red.700}",
+        "$description": "Fault or stop"
+      }
+    }
+  }
+}

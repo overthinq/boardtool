@@ -1,0 +1,75 @@
+{
+  "font-family": {
+    "sans": {
+      "$type": "fontFamily",
+      "$value": [
+        "system-ui",
+        "sans-serif"
+      ],
+      "$description": "System interface font"
+    }
+  },
+  "font-size": {
+    "$type": "dimension",
+    "14": {
+      "$value": {
+        "value": 14,
+        "unit": "px"
+      },
+      "$description": "Small text"
+    },
+    "16": {
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      },
+      "$description": "Body text"
+    },
+    "20": {
+      "$value": {
+        "value": 20,
+        "unit": "px"
+      },
+      "$description": "Small headings"
+    },
+    "24": {
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      },
+      "$description": "Medium headings"
+    }
+  },
+  "font-weight": {
+    "$type": "fontWeight",
+    "regular": {
+      "$value": 400,
+      "$description": "Regular weight"
+    },
+    "semibold": {
+      "$value": 600,
+      "$description": "Semibold weight"
+    }
+  },
+  "line-height": {
+    "$type": "number",
+    "tight": {
+      "$value": 1.25,
+      "$description": "Headings and labels"
+    },
+    "normal": {
+      "$value": 1.5,
+      "$description": "Running text"
+    }
+  },
+  "letter-spacing": {
+    "none": {
+      "$type": "dimension",
+      "$value": {
+        "value": 0,
+        "unit": "px"
+      },
+      "$description": "No extra spacing"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "size": {
+    "$type": "dimension",
+    "4": {
+      "$value": {
+        "value": 4,
+        "unit": "px"
+      },
+      "$description": "4 px step"
+    },
+    "8": {
+      "$value": {
+        "value": 8,
+        "unit": "px"
+      },
+      "$description": "8 px step"
+    },
+    "12": {
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      },
+      "$description": "12 px step"
+    },
+    "16": {
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      },
+      "$description": "16 px step"
+    },
+    "24": {
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      },
+      "$description": "24 px step"
+    },
+    "32": {
+      "$value": {
+        "value": 32,
+        "unit": "px"
+      },
+      "$description": "32 px step"
+    },
+    "full": {
+      "$value": {
+        "value": 9999,
+        "unit": "px"
+      },
+      "$description": "Large enough to round any corner fully"
+    }
+  }
+}
