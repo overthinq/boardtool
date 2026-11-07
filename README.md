@@ -2,7 +2,7 @@
 
 A prototyping environment where an AI agent works only on a design system, its components and HTML boards, while a separate tool, which the agent never sees, provides navigation and an overview of the whole app. Prototypes are made of the same material as the final product, at a fraction of the token cost of an agent reading a canvas.
 
-**Status:** MVP complete (8 of 8 phases). Pages and live board previews in the browser, with notes, tags, frame sizes and moves between pages; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. A lint checks boards against the design system rules.
+**Status:** alpha 0.1.0, the first usable version. Pages and live board previews in the browser, with notes, tags, frame sizes and moves between pages; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. A lint checks boards against the design system rules.
 
 ## Requirements
 
