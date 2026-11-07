@@ -1,5 +1,4 @@
 # BoardTool — tool development
-- Spec: `docs/spec.md`. Implement one phase at a time; never start the next phase unasked.
 - Node 20+, built-in modules only (`node:*`). Zero npm dependencies, no `npm install`, no build step, no framework.
 - ES modules everywhere.
 - `app/lib/` is shared by server and browser: no Node-only APIs there.

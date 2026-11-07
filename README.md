@@ -2,7 +2,7 @@
 
 A prototyping environment where an AI agent works only on a design system, its components and HTML boards, while a separate tool, which the agent never sees, provides navigation and an overview of the whole app. Prototypes are made of the same material as the final product, at a fraction of the token cost of an agent reading a canvas.
 
-**Status:** phase 4 of 8 (token pipeline). Pages and live board previews in the browser; DTCG tokens generate `tokens.css` and the catalog. The token viewer, components, board metadata and lint come in the next phases. Spec: [`docs/spec.md`](docs/spec.md).
+**Status:** phase 4 of 8 (token pipeline). Pages and live board previews in the browser; DTCG tokens generate `tokens.css` and the catalog. The token viewer, components, board metadata and lint come in the next phases.
 
 ## Requirements
 
@@ -27,7 +27,6 @@ Node 20+. No `npm install`, no build step.
 | `project/ds/components/` | Custom Elements, one folder each: `<name>.js`, `<name>.css`, `<name>.md` |
 | `project/ds/tokens.css`, `catalog.md` | Generated |
 | `project/boards/` | Boards; each subfolder is a page, numeric prefixes set the order |
-| `docs/spec.md` | MVP specification |
 
 ## What sets it apart
 
