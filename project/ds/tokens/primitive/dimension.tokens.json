@@ -1,6 +1,13 @@
 {
   "size": {
     "$type": "dimension",
+    "0": {
+      "$value": {
+        "value": 0,
+        "unit": "px"
+      },
+      "$description": "No size"
+    },
     "4": {
       "$value": {
         "value": 4,

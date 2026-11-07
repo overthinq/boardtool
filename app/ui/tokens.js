@@ -1,3 +1,5 @@
+import { el } from "./el.js";
+
 const TIERS = {
   semantic: "Semantic",
   component: "Component",
@@ -10,12 +12,6 @@ const sections = document.querySelector("#sections");
 const content = document.querySelector("#tokens");
 const error = document.querySelector("#error");
 const empty = document.querySelector("#empty");
-
-function el(tag, props = {}, ...children) {
-  const node = Object.assign(document.createElement(tag), props);
-  node.append(...children);
-  return node;
-}
 
 const note = (className, text) => el("p", { className, textContent: text });
 const tokenLink = (name) => el("a", { href: `#${name}`, textContent: name });
@@ -236,7 +232,7 @@ function tierSection(tier, label, tokens) {
   return { section, link: navItem(tier, label, links) };
 }
 
-function render({ tokens, error: message }) {
+function render({ tokens, tokenError: message }) {
   error.hidden = !message;
   error.textContent = message
     ? `The token files have an error: this is the last valid version. ${message}`
@@ -266,4 +262,4 @@ async function load() {
 const events = new EventSource("/__api/events");
 // Runs on the first connection and after every reconnection.
 events.addEventListener("open", load);
-events.addEventListener("tokens", load);
+events.addEventListener("catalog", load);

@@ -1,0 +1,21 @@
+ds-badge {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  font: var(--font-label);
+  letter-spacing: var(--font-label-letter-spacing);
+}
+
+ds-badge[status="ok"] {
+  color: var(--color-status-ok);
+}
+
+ds-badge[status="warning"] {
+  color: var(--color-status-warning);
+}
+
+ds-badge[status="alarm"] {
+  color: var(--color-status-alarm);
+}

@@ -1,0 +1,27 @@
+ds-card {
+  --card-padding: var(--space-4);
+  display: block;
+  padding: var(--card-padding);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  font: var(--font-body);
+  letter-spacing: var(--font-body-letter-spacing);
+}
+
+ds-card[variant="raised"] {
+  border-color: transparent;
+  background: var(--color-surface-base);
+  box-shadow: var(--shadow-raised);
+}
+
+.ds-card-heading {
+  margin: 0 0 var(--space-2);
+  font: var(--font-heading-sm);
+  letter-spacing: var(--font-heading-sm-letter-spacing);
+}
+
+ds-card > :last-child {
+  margin-bottom: 0;
+}

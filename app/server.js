@@ -10,6 +10,7 @@ import {
   TIERS,
   toCss,
 } from "./lib/dtcg.js";
+import { catalogComponent, parseComponent } from "./lib/jsdoc.js";
 
 const PORT = 4800;
 const APP = dirname(fileURLToPath(import.meta.url));
@@ -33,7 +34,7 @@ const TYPES = {
 
 const clients = new Set();
 // The viewer shows the last valid tokens, plus the error of a later failure.
-const designSystem = { tokens: [], error: null };
+const designSystem = { tokens: [], tokenError: null, components: [] };
 
 function send(event, data) {
   for (const res of clients) res.write(`event: ${event}\ndata: ${data}\n\n`);
@@ -156,26 +157,60 @@ async function writeIfChanged(file, content) {
   if (current !== content) await writeFile(file, content);
 }
 
-async function generateTokens() {
+// One folder per component: <name>/<name>.js with the JSDoc, <name>.md with
+// the guidelines.
+async function readComponents() {
+  const dir = join(DS, "components");
+  const entries = await readdir(dir, { withFileTypes: true });
+  const folders = entries
+    .filter((entry) => entry.isDirectory() && isListed(entry))
+    .sort(byName);
+  return Promise.all(
+    folders.map(async ({ name }) => {
+      const read = (extension) =>
+        readFile(join(dir, name, `${name}.${extension}`), "utf8").catch(
+          () => "",
+        );
+      const api = parseComponent(await read("js"));
+      const error = api ? null : `${name}/${name}.js has no JSDoc @element`;
+      return { folder: name, ...api, guide: await read("md"), error };
+    }),
+  );
+}
+
+function catalog() {
+  return [
+    "# Catalog (generated, do not edit)",
+    "",
+    "## Components",
+    ...designSystem.components
+      .filter((component) => component.tag)
+      .map(catalogComponent),
+    "",
+    "## Tokens",
+    ...catalogTokens(designSystem.tokens),
+    "",
+  ].join("\n");
+}
+
+async function generateDesignSystem() {
   try {
     const tokens = buildTokens(await readTokenFiles());
-    const catalog = [
-      "# Catalog (generated, do not edit)",
-      "",
-      "## Tokens",
-      ...catalogTokens(tokens),
-      "",
-    ];
     await writeIfChanged(join(DS, "tokens.css"), toCss(tokens));
-    await writeIfChanged(join(DS, "catalog.md"), catalog.join("\n"));
     designSystem.tokens = describeTokens(tokens);
-    designSystem.error = null;
+    designSystem.tokenError = null;
   } catch (err) {
     // The last generated files stay until the token files are valid again.
     console.error(`Tokens not generated. ${err.message}`);
-    designSystem.error = err.message;
+    designSystem.tokenError = err.message;
   }
-  send("tokens", designSystem.error ? "error" : "ok");
+  try {
+    designSystem.components = await readComponents();
+    await writeIfChanged(join(DS, "catalog.md"), catalog());
+  } catch (err) {
+    console.error(`Catalog not generated. ${err.message}`);
+  }
+  send("catalog", designSystem.tokenError ? "error" : "ok");
 }
 
 createServer((req, res) =>
@@ -196,8 +231,10 @@ function notify(filename) {
   if (area === "ds") {
     // Token files reach the boards through tokens.css: rewriting it sends
     // the event.
-    if (segments[0] === "tokens") generateTokens();
-    else if (path !== "catalog.md") send("ds", path);
+    if (segments[0] !== "tokens" && path !== "catalog.md") send("ds", path);
+    if (segments[0] === "tokens" || segments[0] === "components") {
+      generateDesignSystem();
+    }
   }
   // Pages have no extension: a board event also covers added or removed
   // pages, so the index can refresh its tree.
@@ -222,4 +259,4 @@ watch(PROJECT, { recursive: true }, (_, filename) => {
   );
 });
 
-generateTokens();
+generateDesignSystem();

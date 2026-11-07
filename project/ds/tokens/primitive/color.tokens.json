@@ -104,6 +104,19 @@
         },
         "$description": "Red for alarms"
       }
+    },
+    "shadow": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [
+          0,
+          0,
+          0
+        ],
+        "alpha": 0.16,
+        "hex": "#000000"
+      },
+      "$description": "Black at 16%, for shadows"
     }
   }
 }

@@ -284,3 +284,64 @@ td p {
   padding: 2px 8px;
   border-radius: 4px;
 }
+
+/* Components */
+
+article {
+  max-width: 960px;
+}
+
+article h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+article h2 {
+  margin: 40px 0 8px;
+}
+
+article p,
+article li {
+  max-width: 70ch;
+}
+
+article ul,
+article ol {
+  margin: 8px 0;
+  padding-left: 24px;
+  list-style: revert;
+}
+
+article table {
+  table-layout: fixed;
+}
+
+article th:first-child {
+  width: 200px;
+}
+
+pre {
+  margin: 16px 0 24px;
+  padding: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--sidebar);
+}
+
+.example + pre {
+  margin-top: 0;
+  border-radius: 0 0 4px 4px;
+}
+
+/* Like the board previews: what a board shows without its own background. */
+.example {
+  display: block;
+  width: 100%;
+  height: 120px;
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: #ffffff;
+}

@@ -1,0 +1,15 @@
+{
+  "shadow": {
+    "raised": {
+      "$type": "shadow",
+      "$description": "Elements raised above the page, like cards",
+      "$value": {
+        "color": "{color.shadow}",
+        "offsetX": "{size.0}",
+        "offsetY": "{size.4}",
+        "blur": "{size.12}",
+        "spread": "{size.0}"
+      }
+    }
+  }
+}
