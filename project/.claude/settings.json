@@ -1,6 +1,10 @@
 {
   "permissions": {
-    "allow": ["Bash(node ../app/lint.js *)", "Bash(node ../app/shot.js *)"],
+    "allow": [
+      "Bash(node ../app/lint.js)",
+      "Bash(node ../app/lint.js *)",
+      "Bash(node ../app/shot.js *)"
+    ],
     "deny": [
       "Edit(./ds/tokens.css)",
       "Edit(./ds/catalog.md)",

@@ -28,6 +28,7 @@ import {
   byName,
   DS,
   BOARD_DATA,
+  BOARDS,
   isListed,
   PROJECT,
   readBoardData,
@@ -39,7 +40,6 @@ import { reply, serveFile, TYPES } from "./http.js";
 const PORT = 4800;
 const APP = dirname(fileURLToPath(import.meta.url));
 const UI = join(APP, "ui");
-const BOARDS = join(PROJECT, "boards");
 const HOSTS = [`127.0.0.1:${PORT}`, `localhost:${PORT}`];
 
 const clients = new Set();

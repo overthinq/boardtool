@@ -12,6 +12,7 @@ export const PROJECT = resolve(
   "../project",
 );
 export const DS = join(PROJECT, "ds");
+export const BOARDS = join(PROJECT, "boards");
 export const BOARD_DATA = join(PROJECT, "board.json");
 
 const DEFAULT_BOARD_DATA = {

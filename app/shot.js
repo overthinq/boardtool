@@ -18,9 +18,8 @@ import {
 } from "node:path";
 import { promisify } from "node:util";
 import { reply, serveFile } from "./http.js";
-import { PROJECT, readBoardData } from "./sources.js";
+import { BOARDS, PROJECT, readBoardData } from "./sources.js";
 
-const BOARDS = join(PROJECT, "boards");
 const SHOTS = join(PROJECT, ".shots");
 const DEFAULT_FRAME = { width: 1440, height: 900 };
 

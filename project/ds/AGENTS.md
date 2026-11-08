@@ -4,9 +4,9 @@
 - Colors in `srgb` always include `hex`.
 - Text colors have a `text` segment in their path, surfaces a `surface` segment (`color.text.primary`, `color.surface.base`): the viewer checks every text color on every surface.
 - Typography tokens: `font: var(--x)` plus `letter-spacing: var(--x-letter-spacing)`.
-- Global base rules (`box-sizing`, margins, the page font and colors from tokens) go in `ds/base.css`, never inside a component.
+- Rules shared by several components go in `ds/base.css`, never inside one component: normalization, the page font and colors, color contexts such as dark sections. Semantic tokens only.
 - Component = folder in `ds/components/` with `<name>.js`, `<name>.css`, `<name>.md`. Tag prefix `ds-`, light DOM.
 - Document the API in JSDoc (@element, @attr, @slot, @cssprop, @fires). In `<name>.md`: one ```` ```html ```` example per variant; prose guidelines optional and short.
 - `connectedCallback` must be idempotent. Render native interactive elements inside the component.
 - Register every new component in `ds/components/index.js` and `ds/components/index.css`.
-- After creating or changing a component: `node ../app/lint.js ds/components/<name>/<name>.js`. Fix every error.
+- After a batch of components, not after each one: `node ../app/lint.js` checks the whole project. Fix every error.

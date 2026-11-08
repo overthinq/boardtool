@@ -2,7 +2,7 @@
 
 A prototyping environment where an AI agent works only on a design system, its components and HTML boards, while a separate tool, which the agent never sees, provides navigation and an overview of the whole app. Prototypes are made of the same material as the final product, at a fraction of the token cost of an agent reading a canvas.
 
-**Status:** alpha 0.2.0. Pages and live board previews in the browser, with notes, tags, frame sizes and moves between pages; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. A lint checks boards and components against the design system rules, and the agent can screenshot a board to see what it built.
+**Status:** alpha 0.2.0. Pages and live board previews in the browser, with notes, tags, frame sizes and moves between pages; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. A lint checks boards, components and their stylesheets against the design system rules, and the agent can screenshot a board to see what it built.
 
 ## Requirements
 
@@ -26,7 +26,7 @@ No `npm install`, no build step. Tested on Linux (Fedora) with Node 22, Chrome a
 | Start the tool | `node app/server.js`, then open `http://127.0.0.1:4800/__app/` |
 | Prototyping session | Start the agent in `project/` |
 | Tool development session | Start the agent at the repository root and have it read `app/AGENTS.md` first |
-| Lint a board or a component | `node ../app/lint.js boards/<page>/<file>` or `ds/components/<name>/<name>.js`, from `project/` |
+| Lint | `node ../app/lint.js` from `project/` checks the whole project; pass boards, component `.js` or `.css` files to check only those |
 | Screenshot a board | `node ../app/shot.js boards/<page>/<file> [--height N]` from `project/`; uses the installed Chrome, Chromium, Edge or Firefox, or `BOARDTOOL_BROWSER` |
 
 ## Structure
@@ -38,7 +38,7 @@ No `npm install`, no build step. Tested on Linux (Fedora) with Node 22, Chrome a
 | `project/board.json` | Notes, tags and frame sizes of the boards; written by the tool |
 | `project/ds/tokens/` | DTCG tokens: `primitive/`, `semantic/`, `component/` |
 | `project/ds/components/` | Custom Elements, one folder each: `<name>.js`, `<name>.css`, `<name>.md` |
-| `project/ds/base.css` | Base page rules: normalization and the page font and colors from tokens |
+| `project/ds/base.css` | Rules shared by components: normalization, page font and colors, color contexts |
 | `project/ds/tokens.css`, `catalog.md` | Generated |
 | `project/.shots/` | Latest screenshot of each board; ignored by git |
 | `project/boards/` | Boards; each subfolder is a page, numeric prefixes set the order |
