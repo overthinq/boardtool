@@ -6,7 +6,16 @@ A prototyping environment where an AI agent works only on a design system, its c
 
 ## Requirements
 
-Node 20+. No `npm install`, no build step.
+No `npm install`, no build step. Tested on Linux (Fedora) with Node 22, Chrome and Claude Code 2.1.311; macOS and Windows are expected to work but are untested.
+
+| Requirement | Minimum | Recommended | Why |
+| --- | --- | --- | --- |
+| Node.js | 20 | 22 or later | Runs the tool and the lint |
+| Browser for the tool | Chrome or Edge 123, Firefox 121, Safari 17.5 | Current Chrome or Edge | The tool's pages use recent CSS and JavaScript (`light-dark()`, `:has()`, `Map.groupBy`) |
+| Coding agent | Any agent that reads `AGENTS.md` and runs shell commands (Codex, Cursor, Copilot) | Claude Code 2.1.277 or later, with a recent large model | Claude Code reads `AGENTS.md` natively; tested with Claude Opus 5.5 |
+| Agent sees what it builds | Nothing: the agent works blind and relies on the lint | Claude in Chrome extension, Chrome DevTools MCP or the browser built into the Claude desktop app | Without a view of the result, layout mistakes slip through: in tests, the agent that could take screenshots produced the more polished screens |
+| Permissions | Approve the lint command when the agent asks | Claude Code: start it once in `project/` and accept the trust dialog | Without trust, the lint permission in `project/.claude/settings.json` is ignored |
+| Git | None (download the archive) | Git | To clone and to track the project |
 
 ## Usage
 
