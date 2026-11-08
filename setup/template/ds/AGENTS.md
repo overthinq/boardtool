@@ -1,0 +1,13 @@
+# DS rules
+- Tokens: DTCG, three tiers (primitive / semantic / component), one `ds/tokens/<tier>/<category>.tokens.json` per category. Every token has `$type` and `$description`.
+- Semantic tokens reference primitives. Components and boards never use primitives.
+- Colors in `srgb` always include `hex`.
+- Text colors have a `text` segment in their path, surfaces a `surface` segment (`color.text.primary`, `color.surface.base`): the viewer checks every text color on every surface.
+- Typography tokens: `font: var(--x)` plus `letter-spacing: var(--x-letter-spacing)`.
+- Rules shared by several components go in `ds/base.css`, never inside one component: normalization, the page font and colors, color contexts such as dark sections. Semantic tokens only.
+- Component = folder in `ds/components/` with `<name>.js`, `<name>.css`, `<name>.md`. Tag prefix `ds-`, light DOM.
+- Document the API in JSDoc (@element, @attr, @slot, @cssprop, @fires). In `<name>.md`: one ```` ```html ```` example per variant; prose guidelines optional and short.
+- `connectedCallback` must be idempotent. Render native interactive elements inside the component.
+- Register every new component in `ds/components/index.js` and `ds/components/index.css`.
+- After a batch of components, not after each one: `node {TOOL}/lint.js` checks the whole project. Fix every error.
+<!-- BoardTool writes the rules above this line. Add your own below it. -->
