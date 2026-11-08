@@ -82,6 +82,9 @@ main {
 }
 
 .board {
+  /* A preview never shows a board larger than it is. */
+  --width: min(var(--card), var(--frame-width));
+  --scale: calc(var(--width) / var(--frame-width));
   position: relative;
   border-radius: 4px;
 }
@@ -113,8 +116,8 @@ main {
 }
 
 .preview {
-  width: calc(var(--width) * var(--scale));
-  height: calc(var(--height) * var(--scale));
+  width: calc(var(--width) * 1px);
+  height: calc(var(--frame-height) * var(--scale) * 1px);
   overflow: hidden;
   border: 1px solid var(--border);
   /* What a board without its own background shows when opened directly. */
@@ -122,8 +125,8 @@ main {
 }
 
 .preview iframe {
-  width: var(--width);
-  height: var(--height);
+  width: calc(var(--frame-width) * 1px);
+  height: calc(var(--frame-height) * 1px);
   border: 0;
   transform: scale(var(--scale));
   transform-origin: 0 0;
@@ -172,7 +175,8 @@ button[aria-pressed="true"] {
   margin-bottom: 24px;
 }
 
-#filter {
+#filter,
+#preview-size {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -180,7 +184,7 @@ button[aria-pressed="true"] {
 }
 
 .board p {
-  max-width: 320px;
+  max-width: calc(var(--width) * 1px);
   margin: 4px 0 0;
   color: var(--text-muted);
 }

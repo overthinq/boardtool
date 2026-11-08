@@ -217,6 +217,7 @@ async function handle(req, res) {
   if (path === "/__api/ds") {
     return reply(res, 200, JSON.stringify(designSystem), TYPES[".json"]);
   }
+  if (path === "/__app/config.json") return serveFile(res, APP, "/config.json");
   if (path.startsWith("/__app/")) {
     return serveFile(res, UI, path.slice("/__app".length));
   }

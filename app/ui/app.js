@@ -1,8 +1,7 @@
 import { el } from "./el.js";
 
-const DEFAULT_FRAME = { width: 1440, height: 900 };
-const PREVIEW_WIDTH = 320;
 const DRAG_TYPE = "application/x-boardtool-board";
+const PREVIEW_SIZE_KEY = "boardtool:preview-size";
 
 const nav = document.querySelector("#pages");
 const grid = document.querySelector("#boards");
@@ -12,6 +11,7 @@ const orphans = document.querySelector("#orphans");
 const toolbar = document.querySelector("#toolbar");
 const pageFrame = document.querySelector("#page-frame");
 const filter = document.querySelector("#filter");
+const previewSizes = document.querySelector("#preview-size");
 const boardTemplate = document.querySelector("#board");
 const boardDialog = document.querySelector("#board-dialog");
 const pageDialog = document.querySelector("#page-dialog");
@@ -21,6 +21,15 @@ let pages = [];
 // board.json: tags, notes and frames, written only through the server.
 let data = { tags: [], pages: {}, boards: {} };
 let tagFilter = null;
+let previewSize = localStorage.getItem(PREVIEW_SIZE_KEY) ?? "large";
+
+// app/config.json is edited by hand: say what is wrong instead of a blank
+// page.
+const config = await fetchJson("/__app/config.json").catch((err) => {
+  statusLine.textContent = `app/config.json: ${err.message}`;
+  statusLine.hidden = false;
+  throw err;
+});
 
 async function fetchJson(url) {
   const res = await fetch(url);
@@ -67,7 +76,7 @@ const structure = (tree) =>
 const boardUrl = (path) =>
   "/boards/" + path.split("/").map(encodeURIComponent).join("/");
 
-const frameOfPage = (dir) => data.pages[dir]?.frame ?? DEFAULT_FRAME;
+const frameOfPage = (dir) => data.pages[dir]?.frame ?? config.frame;
 
 const tagLabels = (ids = []) =>
   data.tags.filter((tag) => ids.includes(tag.id)).map((tag) => tag.label);
@@ -103,16 +112,38 @@ function renderNav() {
   nav.replaceChildren(...pages.map(pageLink));
 }
 
+// The wheel scrolls the board inside its preview; at either end it scrolls
+// the index, so a preview never traps the wheel.
+function scrollPreview(event, preview) {
+  const view = preview.contentDocument?.scrollingElement;
+  if (!view || !event.deltaY) return;
+  // scrollTop can be fractional.
+  const atEnd =
+    event.deltaY < 0
+      ? view.scrollTop <= 0
+      : view.scrollHeight - view.clientHeight - view.scrollTop < 1;
+  if (atEnd) return;
+  event.preventDefault();
+  const scale = preview.getBoundingClientRect().width / preview.offsetWidth;
+  view.scrollBy({ top: event.deltaY / scale, behavior: "instant" });
+}
+
 function boardCard(board, page) {
   const card = boardTemplate.content.firstElementChild.cloneNode(true);
   const meta = data.boards[board.path] ?? {};
   const frame = meta.frame ?? frameOfPage(page.dir);
-  card.style.setProperty("--width", `${frame.width}px`);
-  card.style.setProperty("--height", `${frame.height}px`);
-  card.style.setProperty("--scale", PREVIEW_WIDTH / frame.width);
+  card.style.setProperty("--frame-width", frame.width);
+  card.style.setProperty("--frame-height", frame.height);
   const preview = card.querySelector("iframe");
   preview.src = boardUrl(board.path);
   preview.dataset.path = board.path;
+  // Without a scrollbar the board is laid out at its full frame width.
+  preview.addEventListener("load", () => {
+    preview.contentDocument.documentElement.style.scrollbarWidth = "none";
+  });
+  card.addEventListener("wheel", (event) => scrollPreview(event, preview), {
+    passive: false,
+  });
   const link = card.querySelector("a");
   link.href = boardUrl(board.path);
   link.textContent = board.name;
@@ -327,6 +358,31 @@ function openTagsDialog() {
     });
   });
 }
+
+// Previews keep their width while it fits, then shrink with the window.
+// Narrower boards keep their own width (app.css).
+function fitPreviews() {
+  const width = config.previews[previewSize];
+  // 2: the border of the preview.
+  grid.style.setProperty("--card", Math.min(width, grid.clientWidth - 2));
+}
+
+function renderPreviewSize() {
+  for (const button of previewSizes.querySelectorAll("button")) {
+    button.ariaPressed = String(button.value === previewSize);
+  }
+  fitPreviews();
+}
+
+previewSizes.addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (!button) return;
+  previewSize = button.value;
+  localStorage.setItem(PREVIEW_SIZE_KEY, previewSize);
+  renderPreviewSize();
+});
+renderPreviewSize();
+new ResizeObserver(fitPreviews).observe(grid);
 
 tagsDialog.querySelector(".add-tag").addEventListener("click", () => {
   const row = tagRow({ id: "", label: "" });
