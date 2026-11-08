@@ -1,5 +1,5 @@
-// The project files the tool reads, shared by the server, the lint and the
-// screenshots, so all of them see the same project.
+// The files the tool reads, shared by the server, the lint and the
+// screenshots, so all of them see the same project and defaults.
 
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -14,17 +14,7 @@ export const PROJECT = resolve(
 export const DS = join(PROJECT, "ds");
 export const BOARDS = join(PROJECT, "boards");
 export const BOARD_DATA = join(PROJECT, "board.json");
-
-const DEFAULT_BOARD_DATA = {
-  version: 1,
-  tags: [
-    { id: "draft", label: "Draft" },
-    { id: "review", label: "In review" },
-    { id: "approved", label: "Approved" },
-  ],
-  pages: {},
-  boards: {},
-};
+const CONFIG = new URL("./config.json", import.meta.url);
 
 export const byName = (a, b) =>
   a.name.localeCompare(b.name, "en", { numeric: true });
@@ -79,11 +69,21 @@ export async function readComponents() {
   );
 }
 
+// Edited by hand: errors name the file.
+export async function readConfig() {
+  try {
+    return JSON.parse(await readFile(CONFIG, "utf8"));
+  } catch (err) {
+    throw new Error(`app/config.json: ${err.message}`);
+  }
+}
+
 export async function readBoardData() {
   try {
     return JSON.parse(await readFile(BOARD_DATA, "utf8"));
   } catch (err) {
-    if (err.code === "ENOENT") return structuredClone(DEFAULT_BOARD_DATA);
-    throw err;
+    if (err.code !== "ENOENT") throw err;
+    const { tags } = await readConfig();
+    return { version: 1, tags, pages: {}, boards: {} };
   }
 }

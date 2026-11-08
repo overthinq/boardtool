@@ -4,7 +4,7 @@
 // works whether the tool runs or not. Exit code 2 when it cannot take it.
 
 import { execFile } from "node:child_process";
-import { access, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import {
@@ -18,10 +18,9 @@ import {
 } from "node:path";
 import { promisify } from "node:util";
 import { reply, serveFile } from "./http.js";
-import { BOARDS, PROJECT, readBoardData } from "./sources.js";
+import { BOARDS, PROJECT, readBoardData, readConfig } from "./sources.js";
 
 const SHOTS = join(PROJECT, ".shots");
-const CONFIG = new URL("./config.json", import.meta.url);
 
 const programDirs = [
   process.env.PROGRAMFILES,
@@ -119,9 +118,7 @@ if (!browser) {
 }
 
 const path = relative(BOARDS, board).split(sep).join("/");
-const config = await readFile(CONFIG, "utf8")
-  .then(JSON.parse)
-  .catch((err) => fail(`app/config.json: ${err.message}`));
+const config = await readConfig().catch((err) => fail(err.message));
 const data = await readBoardData();
 const page = path.split("/")[0];
 const frame =
