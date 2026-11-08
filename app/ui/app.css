@@ -69,6 +69,19 @@ main {
   padding: 24px;
 }
 
+body.sidebar-hidden {
+  grid-template-columns: 1fr;
+}
+
+body.sidebar-hidden > nav {
+  display: none;
+}
+
+.sidebar-toggle {
+  display: block;
+  margin-bottom: 16px;
+}
+
 #empty {
   margin: 0;
   color: var(--text-muted);

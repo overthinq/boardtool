@@ -1,4 +1,5 @@
 import { el } from "./el.js";
+import "./sidebar.js";
 
 const TIERS = {
   semantic: "Semantic",

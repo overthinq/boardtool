@@ -1,4 +1,5 @@
 import { el } from "./el.js";
+import "./sidebar.js";
 
 const DRAG_TYPE = "application/x-boardtool-board";
 const PREVIEW_SIZE_KEY = "boardtool:preview-size";
@@ -20,7 +21,8 @@ const tagsDialog = document.querySelector("#tags-dialog");
 let pages = [];
 // board.json: tags, notes and frames, written only through the server.
 let data = { tags: [], pages: {}, boards: {} };
-let tagFilter = null;
+// Selected tags: a board shows when it has any of them; none shows all.
+const tagFilters = new Set();
 let previewSize = localStorage.getItem(PREVIEW_SIZE_KEY) ?? "large";
 
 // app/config.json is edited by hand: say what is wrong instead of a blank
@@ -206,19 +208,25 @@ function renderOrphans() {
 function renderToolbar(page) {
   const frame = frameOfPage(page.dir);
   pageFrame.textContent = `Frame ${frame.width} × ${frame.height}`;
-  if (!data.tags.some((tag) => tag.id === tagFilter)) tagFilter = null;
-  const choices = [{ id: null, label: "All" }, ...data.tags];
-  filter.replaceChildren(
-    ...choices.map((tag) => {
-      const button = el("button", { type: "button", textContent: tag.label });
-      button.ariaPressed = String(tag.id === tagFilter);
-      button.addEventListener("click", () => {
-        tagFilter = tag.id;
-        showPage();
-      });
-      return button;
-    }),
-  );
+  for (const id of tagFilters) {
+    if (!data.tags.some((tag) => tag.id === id)) tagFilters.delete(id);
+  }
+  const all = el("button", { type: "button", textContent: "All" });
+  all.ariaPressed = String(tagFilters.size === 0);
+  all.addEventListener("click", () => {
+    tagFilters.clear();
+    showPage();
+  });
+  const tags = data.tags.map((tag) => {
+    const button = el("button", { type: "button", textContent: tag.label });
+    button.ariaPressed = String(tagFilters.has(tag.id));
+    button.addEventListener("click", () => {
+      if (!tagFilters.delete(tag.id)) tagFilters.add(tag.id);
+      showPage();
+    });
+    return button;
+  });
+  filter.replaceChildren(all, ...tags);
 }
 
 function showPage() {
@@ -232,7 +240,8 @@ function showPage() {
   if (page) renderToolbar(page);
   const boards = (page?.boards ?? []).filter(
     (board) =>
-      !tagFilter || data.boards[board.path]?.tags?.includes(tagFilter),
+      tagFilters.size === 0 ||
+      data.boards[board.path]?.tags?.some((id) => tagFilters.has(id)),
   );
   grid.replaceChildren(...boards.map((board) => boardCard(board, page)));
   empty.hidden = (page?.boards.length ?? 0) > 0;

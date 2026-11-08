@@ -1,5 +1,6 @@
 import { el } from "./el.js";
 import { renderMarkdown } from "./markdown.js";
+import "./sidebar.js";
 
 const API_SECTIONS = {
   attributes: "Attributes",
