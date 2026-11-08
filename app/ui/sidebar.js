@@ -4,11 +4,20 @@ import { el } from "./el.js";
 // browser.
 const KEY = "boardtool:sidebar";
 
-const toggle = el("button", { type: "button", className: "sidebar-toggle" });
+const icon = el("span", { className: "icon" });
+const toggle = el(
+  "button",
+  { type: "button", className: "sidebar-toggle icon-button" },
+  icon,
+);
 
 function render(isHidden) {
   document.body.classList.toggle("sidebar-hidden", isHidden);
-  toggle.textContent = isHidden ? "Show sidebar" : "Hide sidebar";
+  const label = isHidden ? "Show sidebar" : "Hide sidebar";
+  toggle.ariaLabel = label;
+  toggle.title = label;
+  icon.classList.toggle("icon-panel-left-open", isHidden);
+  icon.classList.toggle("icon-panel-left-close", !isHidden);
 }
 
 toggle.addEventListener("click", () => {

@@ -6,6 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { TIERS } from "./lib/dtcg.js";
 import { parseComponent, reservedAttributes } from "./lib/jsdoc.js";
+import { newTagId } from "./lib/tags.js";
 
 export const PROJECT = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -84,6 +85,11 @@ export async function readBoardData() {
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
     const { tags } = await readConfig();
-    return { version: 1, tags, pages: {}, boards: {} };
+    const taken = new Set();
+    const labelled = tags.map((label) => ({
+      id: newTagId(label, taken),
+      label,
+    }));
+    return { version: 1, tags: labelled, pages: {}, boards: {} };
   }
 }

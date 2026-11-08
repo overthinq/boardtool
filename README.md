@@ -2,7 +2,7 @@
 
 A prototyping environment where an AI agent works only on a design system, its components and HTML boards, while a separate tool, which the agent never sees, provides navigation and an overview of the whole app. Prototypes are made of the same material as the final product, at a fraction of the token cost of an agent reading a canvas.
 
-**Status:** 0.3.1. Pages and live board previews in the browser, small or large and scrollable, with notes, tags, frame sizes and moves between pages; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. A lint checks boards, components and their stylesheets against the design system rules, and the agent can screenshot a board to see what it built.
+**Status:** 0.3.2. Pages and live board previews in the browser, small or large and scrollable, with notes, tags and frame sizes; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. A lint checks boards, components and their stylesheets against the design system rules, and the agent can screenshot a board to see what it built.
 
 ## Requirements
 
@@ -34,9 +34,9 @@ No `npm install`, no build step. Tested on Linux (Fedora) with Node 22, Chrome a
 | Path | Content |
 | --- | --- |
 | `app/` | The tool: server, lint, screenshots, `lib/` shared with the browser, `ui/` |
-| `app/config.json` | Defaults you can change: `frame`, the board size until a page or board has its own; `previews`, the maximum width in px of small and large previews in the index (narrower boards keep their own width); `tags`, the tags of a new project |
+| `app/config.json` | Defaults you can change: `frame`, the board size until a page or board has its own; `previews`, the maximum width in px of small and large previews in the index (narrower boards keep their own width); `tags`, the tag names of a new project |
 | `project/` | The work of one project: server root and folder where prototyping sessions start |
-| `project/board.json` | Notes, tags and frame sizes of the boards; written by the tool |
+| `project/board.json` | Notes, tags and frame sizes of the boards; written by the tool. Tied to each board's path: a board moved or renamed by hand loses them |
 | `project/ds/tokens/` | DTCG tokens: `primitive/`, `semantic/`, `component/` |
 | `project/ds/components/` | Custom Elements, one folder each: `<name>.js`, `<name>.css`, `<name>.md` |
 | `project/ds/base.css` | Rules shared by components: normalization, page font and colors, color contexts |

@@ -82,6 +82,55 @@ body.sidebar-hidden > nav {
   margin-bottom: 16px;
 }
 
+/* Lucide icons (icons/LICENSE), painted in the text color. */
+.icon {
+  display: block;
+  width: 1.4em;
+  height: 1.4em;
+  background: currentColor;
+  mask: center / contain no-repeat;
+}
+
+.icon-frame {
+  mask-image: url(icons/frame.svg);
+}
+
+.icon-grid-2x2 {
+  mask-image: url(icons/grid-2x2.svg);
+}
+
+.icon-grid-3x3 {
+  mask-image: url(icons/grid-3x3.svg);
+}
+
+.icon-panel-left-close {
+  mask-image: url(icons/panel-left-close.svg);
+}
+
+.icon-panel-left-open {
+  mask-image: url(icons/panel-left-open.svg);
+}
+
+.icon-pencil {
+  mask-image: url(icons/pencil.svg);
+}
+
+.icon-sticky-note {
+  mask-image: url(icons/sticky-note.svg);
+}
+
+.icon-tag {
+  mask-image: url(icons/tag.svg);
+}
+
+.icon-tags {
+  mask-image: url(icons/tags.svg);
+}
+
+.icon-button {
+  padding: 4px 6px;
+}
+
 #empty {
   margin: 0;
   color: var(--text-muted);
@@ -145,11 +194,6 @@ body.sidebar-hidden > nav {
   transform-origin: 0 0;
 }
 
-nav a.drop-target {
-  outline: 2px dashed var(--focus);
-  outline-offset: -2px;
-}
-
 button {
   padding: 4px 10px;
   border: 1px solid var(--border);
@@ -168,16 +212,11 @@ button[aria-pressed="true"] {
   background: var(--selected);
 }
 
-#status,
-#orphans {
+#status {
   margin: 0 0 16px;
   padding: 12px;
   border: 1px solid var(--danger);
   border-radius: 4px;
-}
-
-#orphans li + li {
-  margin-top: 8px;
 }
 
 #toolbar {
@@ -196,18 +235,39 @@ button[aria-pressed="true"] {
   margin-left: 16px;
 }
 
-.board p {
+.board p,
+.board .tags {
   max-width: calc(var(--width) * 1px);
   margin: 4px 0 0;
   color: var(--text-muted);
 }
 
-.board p:empty {
+.board p:empty,
+.board .tags:empty {
   display: none;
 }
 
-.board .edit {
+.board .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pill {
+  padding: 1px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.board .tags .pill {
+  color: var(--text);
+}
+
+.board-actions {
   position: relative;
+  display: flex;
+  gap: 4px;
   margin-top: 8px;
 }
 

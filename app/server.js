@@ -1,21 +1,7 @@
 import { createServer, STATUS_CODES } from "node:http";
 import { watch } from "node:fs";
-import {
-  readdir,
-  readFile,
-  rename,
-  stat,
-  writeFile,
-} from "node:fs/promises";
-import {
-  basename,
-  dirname,
-  extname,
-  join,
-  relative,
-  resolve,
-  sep,
-} from "node:path";
+import { readdir, readFile, rename, stat, writeFile } from "node:fs/promises";
+import { dirname, extname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   buildTokens,
@@ -157,38 +143,6 @@ async function readJson(req) {
   }
 }
 
-const exists = (path) => stat(path).then(() => true, () => false);
-
-// The only write to boards/: a board file moves to another page, and its
-// metadata moves with it.
-async function moveBoard({ from, to }) {
-  if (typeof from !== "string" || typeof to !== "string") {
-    throw new RequestError(400);
-  }
-  const source = resolve(BOARDS, from);
-  const page = resolve(BOARDS, to);
-  const target = join(page, basename(source));
-  if (
-    dirname(dirname(source)) !== BOARDS ||
-    dirname(page) !== BOARDS ||
-    extname(source) !== ".html"
-  ) {
-    throw new RequestError(400, "Expected a board and a page in boards/");
-  }
-  if (!(await exists(source))) throw new RequestError(404, `No board ${from}`);
-  // rename() would silently replace a board with the same name.
-  if (await exists(target)) {
-    throw new RequestError(409, `${to} already has ${basename(source)}`);
-  }
-  await rename(source, target);
-  const data = await readBoardData();
-  if (!Object.hasOwn(data.boards, from)) return;
-  const moved = relative(BOARDS, target).split(sep).join("/");
-  data.boards[moved] = data.boards[from];
-  delete data.boards[from];
-  await writeBoardData(data);
-}
-
 async function handle(req, res) {
   // Pages from other sites can reach 127.0.0.1 through DNS rebinding, but
   // they keep their own host name.
@@ -199,10 +153,6 @@ async function handle(req, res) {
     const data = await readJson(req);
     checkBoardData(data);
     await writeBoardData(data);
-    return reply(res, 204, "");
-  }
-  if (path === "/__api/move" && req.method === "POST") {
-    await moveBoard(await readJson(req));
     return reply(res, 204, "");
   }
   if (req.method !== "GET" && req.method !== "HEAD") return reply(res, 405);
@@ -218,6 +168,9 @@ async function handle(req, res) {
     return reply(res, 200, JSON.stringify(designSystem), TYPES[".json"]);
   }
   if (path === "/__app/config.json") return serveFile(res, APP, "/config.json");
+  if (path.startsWith("/__app/lib/")) {
+    return serveFile(res, join(APP, "lib"), path.slice("/__app/lib".length));
+  }
   if (path.startsWith("/__app/")) {
     return serveFile(res, UI, path.slice("/__app".length));
   }

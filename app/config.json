@@ -1,12 +1,5 @@
 {
   "frame": { "width": 1440, "height": 900 },
   "previews": { "small": 320, "large": 800 },
-  "tags": [
-    { "id": "desktop", "label": "Desktop" },
-    { "id": "mobile", "label": "Mobile" },
-    { "id": "draft", "label": "Draft" },
-    { "id": "variant", "label": "Variant" },
-    { "id": "temp", "label": "Temp" },
-    { "id": "delete", "label": "Delete" }
-  ]
+  "tags": ["Desktop", "Mobile", "Draft", "Variant", "Temp", "Delete"]
 }

@@ -1,21 +1,22 @@
 import { el } from "./el.js";
+import { newTagId } from "./lib/tags.js";
 import "./sidebar.js";
 
-const DRAG_TYPE = "application/x-boardtool-board";
 const PREVIEW_SIZE_KEY = "boardtool:preview-size";
 
 const nav = document.querySelector("#pages");
 const grid = document.querySelector("#boards");
 const empty = document.querySelector("#empty");
 const statusLine = document.querySelector("#status");
-const orphans = document.querySelector("#orphans");
 const toolbar = document.querySelector("#toolbar");
 const pageFrame = document.querySelector("#page-frame");
 const filter = document.querySelector("#filter");
 const previewSizes = document.querySelector("#preview-size");
 const boardTemplate = document.querySelector("#board");
-const boardDialog = document.querySelector("#board-dialog");
+const frameDialog = document.querySelector("#frame-dialog");
+const boardTagsDialog = document.querySelector("#board-tags-dialog");
 const pageDialog = document.querySelector("#page-dialog");
+const noteDialog = document.querySelector("#note-dialog");
 const tagsDialog = document.querySelector("#tags-dialog");
 
 let pages = [];
@@ -59,15 +60,28 @@ async function attempt(action) {
   }
 }
 
+// Metadata is tied to a board's path: a board moved, renamed or deleted
+// outside the tool loses it with the next save.
 function updateData(change) {
   const next = structuredClone(data);
+  const paths = new Set(
+    pages.flatMap((page) => page.boards.map((board) => board.path)),
+  );
+  for (const path of Object.keys(next.boards)) {
+    if (!paths.has(path)) delete next.boards[path];
+  }
   change(next);
   return attempt(() => write("PUT", "/__api/board", next));
 }
 
-function moveBoard(from, to) {
-  if (from.split("/")[0] === to) return;
-  attempt(() => write("POST", "/__api/move", { from, to }));
+// Changes the metadata of one board; an empty entry is removed.
+function updateEntry(path, change) {
+  return updateData((next) => {
+    const entry = { ...next.boards[path] };
+    change(entry);
+    if (Object.keys(entry).length) next.boards[path] = entry;
+    else delete next.boards[path];
+  });
 }
 
 const structure = (tree) =>
@@ -80,32 +94,17 @@ const boardUrl = (path) =>
 
 const frameOfPage = (dir) => data.pages[dir]?.frame ?? config.frame;
 
-const tagLabels = (ids = []) =>
-  data.tags.filter((tag) => ids.includes(tag.id)).map((tag) => tag.label);
+const tagsOf = (ids = []) => data.tags.filter((tag) => ids.includes(tag.id));
 
 function currentPage() {
   const dir = decodeURIComponent(location.hash.slice(1));
   return pages.find((page) => page.dir === dir) ?? pages[0];
 }
 
-// Each page in the sidebar takes the boards dropped on it.
 function pageLink(page) {
   const link = el("a", {
     href: `#${encodeURIComponent(page.dir)}`,
     textContent: page.name,
-  });
-  link.addEventListener("dragover", (event) => {
-    if (!event.dataTransfer.types.includes(DRAG_TYPE)) return;
-    event.preventDefault();
-    link.classList.add("drop-target");
-  });
-  link.addEventListener("dragleave", () => {
-    link.classList.remove("drop-target");
-  });
-  link.addEventListener("drop", (event) => {
-    event.preventDefault();
-    link.classList.remove("drop-target");
-    moveBoard(event.dataTransfer.getData(DRAG_TYPE), page.dir);
   });
   return el("li", {}, link);
 }
@@ -149,60 +148,23 @@ function boardCard(board, page) {
   const link = card.querySelector("a");
   link.href = boardUrl(board.path);
   link.textContent = board.name;
-  card.querySelector(".tags").textContent = tagLabels(meta.tags).join(", ");
-  card.querySelector(".note").textContent = meta.note ?? "";
-  const edit = card.querySelector(".edit");
-  edit.ariaLabel = `Edit ${board.name}`;
-  edit.addEventListener("click", () => openBoardDialog(board, page));
-  card.addEventListener("dragstart", (event) => {
-    event.dataTransfer.setData(DRAG_TYPE, board.path);
-  });
-  return card;
-}
-
-function orphanItem(path, freeBoards) {
-  const item = el("li", {}, "Metadata for ", el("code", { textContent: path }));
-  item.append(" has no board. ");
-  if (freeBoards.length) {
-    // Boards of the same page come first: a rename usually stays in its page.
-    // No board is preselected, a wrong guess would move the metadata.
-    const inPage = (board) => board.startsWith(`${path.split("/")[0]}/`);
-    const samePageFirst = [
-      ...freeBoards.filter(inPage),
-      ...freeBoards.filter((board) => !inPage(board)),
-    ];
-    const options = samePageFirst.map((free) =>
-      el("option", { value: free, textContent: free }),
-    );
-    const choose = el("option", { value: "", textContent: "Choose a board…" });
-    const target = el("select", { ariaLabel: "Board" }, choose, ...options);
-    const reassign = el("button", { type: "button", textContent: "Reassign" });
-    reassign.addEventListener("click", () => {
-      if (!target.value) return target.focus();
-      updateData((next) => {
-        next.boards[target.value] = next.boards[path];
-        delete next.boards[path];
-      });
-    });
-    item.append(target, " ", reassign, " ");
-  }
-  const discard = el("button", { type: "button", textContent: "Discard" });
-  discard.addEventListener("click", () =>
-    updateData((next) => {
-      delete next.boards[path];
-    }),
+  card.querySelector(".tags").replaceChildren(
+    ...tagsOf(meta.tags).map((tag) =>
+      el("li", { className: "pill", textContent: tag.label }),
+    ),
   );
-  item.append(discard);
-  return item;
-}
-
-// Metadata whose board was renamed or deleted outside the tool.
-function renderOrphans() {
-  const paths = pages.flatMap((page) => page.boards.map((board) => board.path));
-  const lost = Object.keys(data.boards).filter((path) => !paths.includes(path));
-  const free = paths.filter((path) => !Object.hasOwn(data.boards, path));
-  orphans.hidden = lost.length === 0;
-  orphans.replaceChildren(...lost.map((path) => orphanItem(path, free)));
+  card.querySelector(".note").textContent = meta.note ?? "";
+  const actions = [
+    [".frame-button", "Edit frame of", () => openFrameDialog(board, page)],
+    [".note-button", "Edit note of", () => openNoteDialog(board)],
+    [".tags-button", "Edit tags of", () => openBoardTagsDialog(board)],
+  ];
+  for (const [selector, label, open] of actions) {
+    const button = card.querySelector(selector);
+    button.ariaLabel = `${label} ${board.name}`;
+    button.addEventListener("click", open);
+  }
+  return card;
 }
 
 function renderToolbar(page) {
@@ -211,14 +173,22 @@ function renderToolbar(page) {
   for (const id of tagFilters) {
     if (!data.tags.some((tag) => tag.id === id)) tagFilters.delete(id);
   }
-  const all = el("button", { type: "button", textContent: "All" });
+  const all = el("button", {
+    type: "button",
+    className: "pill",
+    textContent: "All",
+  });
   all.ariaPressed = String(tagFilters.size === 0);
   all.addEventListener("click", () => {
     tagFilters.clear();
     showPage();
   });
   const tags = data.tags.map((tag) => {
-    const button = el("button", { type: "button", textContent: tag.label });
+    const button = el("button", {
+      type: "button",
+      className: "pill",
+      textContent: tag.label,
+    });
     button.ariaPressed = String(tagFilters.has(tag.id));
     button.addEventListener("click", () => {
       if (!tagFilters.delete(tag.id)) tagFilters.add(tag.id);
@@ -235,7 +205,6 @@ function showPage() {
     const isCurrent = decodeURIComponent(link.hash.slice(1)) === page?.dir;
     link.ariaCurrent = isCurrent ? "page" : null;
   }
-  renderOrphans();
   toolbar.hidden = !page;
   if (page) renderToolbar(page);
   const boards = (page?.boards ?? []).filter(
@@ -256,55 +225,60 @@ function openDialog(dialog, onSave) {
   dialog.showModal();
 }
 
-function openBoardDialog(board, page) {
+function openFrameDialog(board, page) {
   const meta = data.boards[board.path] ?? {};
-  const fields = boardDialog.querySelector("form").elements;
+  const fields = frameDialog.querySelector("form").elements;
   const pageSize = frameOfPage(page.dir);
-  boardDialog.querySelector("h2").textContent = `Edit ${board.name}`;
-  boardDialog.querySelector(".tag-choices").replaceChildren(
+  frameDialog.querySelector("h2").textContent = `Frame of ${board.name}`;
+  fields.width.value = meta.frame?.width ?? "";
+  fields.height.value = meta.frame?.height ?? "";
+  fields.width.placeholder = pageSize.width;
+  fields.height.placeholder = pageSize.height;
+  openDialog(frameDialog, () =>
+    updateEntry(board.path, (entry) => {
+      if (!fields.width.value && !fields.height.value) {
+        delete entry.frame;
+        return;
+      }
+      entry.frame = {
+        width: Number(fields.width.value) || pageSize.width,
+        height: Number(fields.height.value) || pageSize.height,
+      };
+    }),
+  );
+}
+
+function openBoardTagsDialog(board) {
+  const meta = data.boards[board.path] ?? {};
+  const choices = boardTagsDialog.querySelector(".tag-choices");
+  boardTagsDialog.querySelector("h2").textContent = `Tags of ${board.name}`;
+  choices.replaceChildren(
     ...data.tags.map((tag) => {
       const checked = meta.tags?.includes(tag.id) ?? false;
       const box = el("input", { type: "checkbox", value: tag.id, checked });
       return el("label", {}, box, ` ${tag.label}`);
     }),
   );
-  fields.note.value = meta.note ?? "";
-  fields.width.value = meta.frame?.width ?? "";
-  fields.height.value = meta.frame?.height ?? "";
-  fields.width.placeholder = pageSize.width;
-  fields.height.placeholder = pageSize.height;
-  fields.page.replaceChildren(
-    ...pages.map((option) =>
-      el("option", {
-        value: option.dir,
-        textContent: option.name,
-        selected: option === page,
-      }),
-    ),
+  openDialog(boardTagsDialog, () =>
+    updateEntry(board.path, (entry) => {
+      const boxes = [...choices.querySelectorAll("input:checked")];
+      if (boxes.length) entry.tags = boxes.map((box) => box.value);
+      else delete entry.tags;
+    }),
   );
-  openDialog(boardDialog, (form) => {
-    const entry = {};
-    const tags = [...form.querySelectorAll(".tag-choices input:checked")];
-    if (tags.length) entry.tags = tags.map((box) => box.value);
-    const note = fields.note.value.trim();
-    if (note) entry.note = note;
-    if (fields.width.value || fields.height.value) {
-      entry.frame = {
-        width: Number(fields.width.value) || pageSize.width,
-        height: Number(fields.height.value) || pageSize.height,
-      };
-    }
-    const to = fields.page.value;
-    attempt(async () => {
-      const next = structuredClone(data);
-      if (Object.keys(entry).length) next.boards[board.path] = entry;
-      else delete next.boards[board.path];
-      await write("PUT", "/__api/board", next);
-      if (to !== page.dir) {
-        await write("POST", "/__api/move", { from: board.path, to });
-      }
-    });
-  });
+}
+
+function openNoteDialog(board) {
+  const field = noteDialog.querySelector("textarea");
+  noteDialog.querySelector("h2").textContent = `Note on ${board.name}`;
+  field.value = data.boards[board.path]?.note ?? "";
+  openDialog(noteDialog, () =>
+    updateEntry(board.path, (entry) => {
+      const note = field.value.trim();
+      if (note) entry.note = note;
+      else delete entry.note;
+    }),
+  );
 }
 
 function openPageDialog(page) {
@@ -331,20 +305,6 @@ function tagRow(tag) {
   const row = el("li", {}, name, " ", remove);
   remove.addEventListener("click", () => row.remove());
   return row;
-}
-
-// "In review" → "in-review", unique among the ids in use.
-function newTagId(label, taken) {
-  const base =
-    label
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "") || "tag";
-  let id = base;
-  for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
-  taken.add(id);
-  return id;
 }
 
 function openTagsDialog() {
@@ -431,11 +391,15 @@ async function onBoardChange({ data: path }) {
 }
 
 const events = new EventSource("/__api/events");
-// Runs on the first connection and after every reconnection, when files may
-// have changed while the server was down.
-events.addEventListener("open", load);
+// Reconnecting means the server restarted, maybe with a newer tool: reload
+// the whole page, not only the data.
+let hasConnected = false;
+events.addEventListener("open", () => {
+  if (hasConnected) return location.reload();
+  hasConnected = true;
+  load();
+});
 events.addEventListener("board", onBoardChange);
-// A move changes board.json and the tree together: reload both.
 events.addEventListener("metadata", load);
 events.addEventListener("ds", () => {
   for (const frame of grid.querySelectorAll("iframe")) reload(frame);

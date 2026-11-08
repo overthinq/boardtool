@@ -16,44 +16,48 @@
   </nav>
   <main>
     <p id="status" role="alert" hidden></p>
-    <ul id="orphans" hidden></ul>
     <div id="toolbar" hidden>
       <span id="page-frame"></span>
-      <button type="button" id="edit-page">Edit frame</button>
+      <button type="button" id="edit-page" class="icon-button" aria-label="Edit page frame" title="Edit page frame"><span class="icon icon-frame"></span></button>
       <div id="filter" role="group" aria-label="Filter by tag"></div>
-      <button type="button" id="edit-tags">Tags</button>
+      <button type="button" id="edit-tags" class="icon-button" aria-label="Manage tags" title="Manage tags"><span class="icon icon-tags"></span></button>
       <div id="preview-size" role="group" aria-label="Preview size">
-        <button type="button" value="small">Small</button>
-        <button type="button" value="large">Large</button>
+        <button type="button" value="small" class="icon-button" aria-label="Small previews" title="Small previews"><span class="icon icon-grid-3x3"></span></button>
+        <button type="button" value="large" class="icon-button" aria-label="Large previews" title="Large previews"><span class="icon icon-grid-2x2"></span></button>
       </div>
     </div>
     <p id="empty" hidden>No boards yet. Add HTML files to <code>project/boards/&lt;page&gt;/</code>.</p>
     <ul id="boards"></ul>
   </main>
   <template id="board">
-    <li class="board" draggable="true">
+    <li class="board">
       <div class="preview"><iframe loading="lazy" inert></iframe></div>
       <a></a>
-      <p class="tags"></p>
+      <ul class="tags"></ul>
       <p class="note"></p>
-      <button type="button" class="edit">Edit</button>
+      <div class="board-actions">
+        <button type="button" class="icon-button frame-button" title="Edit frame"><span class="icon icon-pencil"></span></button>
+        <button type="button" class="icon-button note-button" title="Edit note"><span class="icon icon-sticky-note"></span></button>
+        <button type="button" class="icon-button tags-button" title="Edit tags"><span class="icon icon-tag"></span></button>
+      </div>
     </li>
   </template>
-  <dialog id="board-dialog">
+  <dialog id="frame-dialog">
     <form method="dialog">
       <h2></h2>
-      <fieldset>
-        <legend>Tags</legend>
-        <div class="tag-choices"></div>
-      </fieldset>
-      <label>Note <textarea name="note" rows="3"></textarea></label>
-      <fieldset>
-        <legend>Frame</legend>
-        <label>Width <input name="width" type="number" min="1" step="1"></label>
-        <label>Height <input name="height" type="number" min="1" step="1"></label>
-        <p class="hint">Empty fields use the page frame.</p>
-      </fieldset>
-      <label>Page <select name="page"></select></label>
+      <label>Width <input name="width" type="number" min="1" step="1"></label>
+      <label>Height <input name="height" type="number" min="1" step="1"></label>
+      <p class="hint">Empty fields use the page frame.</p>
+      <div class="actions">
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="board-tags-dialog">
+    <form method="dialog">
+      <h2></h2>
+      <div class="tag-choices"></div>
       <div class="actions">
         <button value="cancel" formnovalidate>Cancel</button>
         <button value="save">Save</button>
@@ -65,6 +69,17 @@
       <h2></h2>
       <label>Width <input name="width" type="number" min="1" step="1" required></label>
       <label>Height <input name="height" type="number" min="1" step="1" required></label>
+      <div class="actions">
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="note-dialog">
+    <form method="dialog">
+      <h2></h2>
+      <label>Note <textarea name="note" rows="6"></textarea></label>
+      <p class="hint">The agent reads it before editing the board.</p>
       <div class="actions">
         <button value="cancel" formnovalidate>Cancel</button>
         <button value="save">Save</button>
