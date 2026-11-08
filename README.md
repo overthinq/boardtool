@@ -8,13 +8,15 @@ A prototyping environment where an AI agent works only on a design system, its c
 
 No `npm install`, no build step. Tested on Linux (Fedora) with Node 22, Chrome and Claude Code 2.1.311; macOS and Windows are expected to work but are untested.
 
+> **Trust the workspace.** With Claude Code, start it once in `project/` and accept the trust dialog before working. Until then Claude Code ignores the permissions in `project/.claude/settings.json`: the agent has to ask for every lint and screenshot, and in non-interactive runs (`claude -p`) those commands are refused, so the agent cannot check or see its work.
+
 | Requirement | Minimum | Recommended | Why |
 | --- | --- | --- | --- |
 | Node.js | 20 | 22 or later | Runs the tool and the lint |
 | Browser for the tool | Chrome or Edge 123, Firefox 121, Safari 17.5 | Current Chrome or Edge | The tool's pages use recent CSS and JavaScript (`light-dark()`, `:has()`, `Map.groupBy`) |
 | Coding agent | Any agent that reads `AGENTS.md` and runs shell commands (Codex, Cursor, Copilot) | Claude Code 2.1.277 or later, with a recent large model | Claude Code reads `AGENTS.md` natively; tested with Claude Opus 5.5 |
-| Agent sees what it builds | Nothing: the agent works blind and relies on the lint | Claude in Chrome extension, Chrome DevTools MCP or the browser built into the Claude desktop app | Without a view of the result, layout mistakes slip through: in tests, the agent that could take screenshots produced the more polished screens |
-| Permissions | Approve the lint command when the agent asks | Claude Code: start it once in `project/` and accept the trust dialog | Without trust, the lint permission in `project/.claude/settings.json` is ignored |
+| Agent sees what it builds | Chrome, Chromium, Edge or Firefox installed, used headless by `app/shot.js` | The same, plus the agent's own browser tool (Claude in Chrome, Chrome DevTools MCP, the browser built into the Claude desktop app) | Without a view of the result, layout mistakes slip through: in tests, screenshots removed the alignment defects |
+| Workspace trust (Claude Code) | Required: start Claude Code once in `project/` and accept the trust dialog | — | Activates the permissions for the lint and the screenshots in `project/.claude/settings.json` (see the note above) |
 | Git | None (download the archive) | Git | To clone and to track the project |
 
 ## Usage
