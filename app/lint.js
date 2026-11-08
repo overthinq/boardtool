@@ -1,11 +1,12 @@
-// Usage: node app/lint.js <board.html>...
-// Prints one line per error, nothing for a correct board. Exit code 1 on
+// Usage: node app/lint.js <board.html | component.js>...
+// Prints one line per error, nothing for a correct file. Exit code 1 on
 // errors, 2 when the lint cannot run. Reads tokens and components from their
 // sources, so it is right whether the server runs or not.
 
 import { readFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import { buildTokens } from "./lib/dtcg.js";
+import { parseComponent, reservedAttributes } from "./lib/jsdoc.js";
 import { readComponents, readTokenFiles } from "./sources.js";
 
 const TAG = /<(\/?)([a-zA-Z][\w-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
@@ -19,6 +20,7 @@ const UNLABELLED_INPUTS = ["hidden", "submit", "button", "reset", "image"];
 
 // Same length and line breaks, so positions keep pointing at the right line.
 const blank = (text) => text.replace(/[^\n]/g, " ");
+const lineAt = (text, index) => text.slice(0, index).split("\n").length;
 
 function attributes(source) {
   const result = new Map();
@@ -84,9 +86,8 @@ function checkElement(element, context) {
 
 function lintBoard(html, context) {
   const errors = [];
-  const lineAt = (index) => html.slice(0, index).split("\n").length;
   const reporter = (index) => (message) =>
-    errors.push({ line: lineAt(index), message });
+    errors.push({ line: lineAt(html, index), message });
   let source = html.replace(/<!--[\s\S]*?-->/g, blank);
   for (const match of source.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) {
     reporter(match.index)("<style> block: use DS components and tokens");
@@ -120,6 +121,18 @@ function lintBoard(html, context) {
   return errors.sort((a, b) => a.line - b.line);
 }
 
+function lintComponent(source) {
+  const component = parseComponent(source);
+  if (!component) return [{ line: 1, message: "no JSDoc block with @element" }];
+  return reservedAttributes(component).map((name) => {
+    const tag = new RegExp(`@attr(?:ibute)?\\s*(?:\\{[^}]*\\}\\s*)?${name}\\b`);
+    return {
+      line: lineAt(source, source.search(tag)),
+      message: `attribute "${name}" is an HTML attribute: rename it`,
+    };
+  });
+}
+
 async function loadContext() {
   const tokens = buildTokens(await readTokenFiles());
   const tiers = new Map(
@@ -134,7 +147,7 @@ async function loadContext() {
 
 const files = process.argv.slice(2);
 if (!files.length) {
-  console.error("Usage: node app/lint.js <board.html>...");
+  console.error("Usage: node app/lint.js <board.html | component.js>...");
   process.exit(2);
 }
 const context = await loadContext().catch((err) => {
@@ -144,11 +157,14 @@ const context = await loadContext().catch((err) => {
 let hasErrors = false;
 for (const file of files) {
   const path = relative(process.cwd(), resolve(file));
-  const html = await readFile(file, "utf8").catch((err) => {
+  const source = await readFile(file, "utf8").catch((err) => {
     console.error(`${path}: ${err.message}`);
     process.exit(2);
   });
-  for (const { line, message } of lintBoard(html, context)) {
+  const errors = file.endsWith(".js")
+    ? lintComponent(source)
+    : lintBoard(source, context);
+  for (const { line, message } of errors) {
     console.log(`${path}:${line}: ${message}`);
     hasErrors = true;
   }

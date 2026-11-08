@@ -7,3 +7,4 @@
 - Interactive elements are native (`<button>`, `<input>`, `<dialog>`).
 - Asset paths are absolute from server root (`/ds/...`).
 - After writing: `node ../app/lint.js boards/<page>/<file>`. Fix every error.
+- Look at the board when it is done and after a fix, not after every edit: `node ../app/shot.js boards/<page>/<file>` saves a screenshot at the board's frame size and prints its path; read that image. Add `--height N` only to see below the frame. A browser tool of your own works too.

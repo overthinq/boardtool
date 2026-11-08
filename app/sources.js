@@ -1,17 +1,29 @@
-// The project files the tool reads, shared by the server and the lint so
-// both always see the same tokens and components.
+// The project files the tool reads, shared by the server, the lint and the
+// screenshots, so all of them see the same project.
 
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { TIERS } from "./lib/dtcg.js";
-import { parseComponent } from "./lib/jsdoc.js";
+import { parseComponent, reservedAttributes } from "./lib/jsdoc.js";
 
 export const PROJECT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../project",
 );
 export const DS = join(PROJECT, "ds");
+export const BOARD_DATA = join(PROJECT, "board.json");
+
+const DEFAULT_BOARD_DATA = {
+  version: 1,
+  tags: [
+    { id: "draft", label: "Draft" },
+    { id: "review", label: "In review" },
+    { id: "approved", label: "Approved" },
+  ],
+  pages: {},
+  boards: {},
+};
 
 export const byName = (a, b) =>
   a.name.localeCompare(b.name, "en", { numeric: true });
@@ -36,6 +48,13 @@ export async function readTokenFiles() {
   return files;
 }
 
+function reservedError(component) {
+  const names = reservedAttributes(component);
+  if (!names.length) return null;
+  const list = names.join(", ");
+  return `Attributes named like HTML attributes, rename them: ${list}`;
+}
+
 // One folder per component: <name>/<name>.js with the JSDoc, <name>.md with
 // the guidelines.
 export async function readComponents() {
@@ -51,8 +70,19 @@ export async function readComponents() {
           () => "",
         );
       const api = parseComponent(await read("js"));
-      const error = api ? null : `${name}/${name}.js has no JSDoc @element`;
+      const error = api
+        ? reservedError(api)
+        : `${name}/${name}.js has no JSDoc @element`;
       return { folder: name, ...api, guide: await read("md"), error };
     }),
   );
+}
+
+export async function readBoardData() {
+  try {
+    return JSON.parse(await readFile(BOARD_DATA, "utf8"));
+  } catch (err) {
+    if (err.code === "ENOENT") return structuredClone(DEFAULT_BOARD_DATA);
+    throw err;
+  }
 }

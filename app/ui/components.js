@@ -21,6 +21,8 @@ const idOf = (component) => component.tag || component.folder;
 function exampleDocument(html) {
   const doc = new DOMParser().parseFromString(template, "text/html");
   doc.querySelector("main").innerHTML = html;
+  // Room for the example's edges and shadows, which a board would show.
+  doc.body.style.padding = "16px";
   return `<!doctype html>\n${doc.documentElement.outerHTML}`;
 }
 

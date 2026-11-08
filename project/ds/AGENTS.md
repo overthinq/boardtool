@@ -1,10 +1,12 @@
 # DS rules
-- Tokens: DTCG, three tiers (primitive / semantic / component). Every token has `$type` and `$description`.
+- Tokens: DTCG, three tiers (primitive / semantic / component), one `ds/tokens/<tier>/<category>.tokens.json` per category. Every token has `$type` and `$description`.
 - Semantic tokens reference primitives. Components and boards never use primitives.
 - Colors in `srgb` always include `hex`.
 - Text colors have a `text` segment in their path, surfaces a `surface` segment (`color.text.primary`, `color.surface.base`): the viewer checks every text color on every surface.
 - Typography tokens: `font: var(--x)` plus `letter-spacing: var(--x-letter-spacing)`.
+- Global base rules (`box-sizing`, margins, the page font and colors from tokens) go in `ds/base.css`, never inside a component.
 - Component = folder in `ds/components/` with `<name>.js`, `<name>.css`, `<name>.md`. Tag prefix `ds-`, light DOM.
-- Document the API in JSDoc (@element, @attr, @slot, @cssprop, @fires). Guidelines and ```` ```html ```` examples in `<name>.md`.
+- Document the API in JSDoc (@element, @attr, @slot, @cssprop, @fires). In `<name>.md`: one ```` ```html ```` example per variant; prose guidelines optional and short.
 - `connectedCallback` must be idempotent. Render native interactive elements inside the component.
 - Register every new component in `ds/components/index.js` and `ds/components/index.css`.
+- After creating or changing a component: `node ../app/lint.js ds/components/<name>/<name>.js`. Fix every error.

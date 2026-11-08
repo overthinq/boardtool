@@ -27,41 +27,20 @@ import { catalogComponent } from "./lib/jsdoc.js";
 import {
   byName,
   DS,
+  BOARD_DATA,
   isListed,
   PROJECT,
+  readBoardData,
   readComponents,
   readTokenFiles,
 } from "./sources.js";
+import { reply, serveFile, TYPES } from "./http.js";
 
 const PORT = 4800;
 const APP = dirname(fileURLToPath(import.meta.url));
 const UI = join(APP, "ui");
 const BOARDS = join(PROJECT, "boards");
-const BOARD_DATA = join(PROJECT, "board.json");
 const HOSTS = [`127.0.0.1:${PORT}`, `localhost:${PORT}`];
-const DEFAULT_BOARD_DATA = {
-  version: 1,
-  tags: [
-    { id: "draft", label: "Draft" },
-    { id: "review", label: "In review" },
-    { id: "approved", label: "Approved" },
-  ],
-  pages: {},
-  boards: {},
-};
-
-const TYPES = {
-  ".html": "text/html; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".md": "text/markdown; charset=utf-8",
-  ".svg": "image/svg+xml",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".webp": "image/webp",
-  ".woff2": "font/woff2",
-};
 
 const clients = new Set();
 // The viewer shows the last valid tokens, plus the error of a later failure.
@@ -77,18 +56,6 @@ class RequestError extends Error {
 function send(event, data) {
   for (const res of clients) res.write(`event: ${event}\ndata: ${data}\n\n`);
 }
-
-function reply(
-  res,
-  status,
-  body = STATUS_CODES[status],
-  type = "text/plain; charset=utf-8",
-) {
-  // Boards must always reflect the files on disk, also after a live reload.
-  res.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
-  res.end(body);
-}
-
 
 // "01-monitoring" → "Monitoring", "02-alarm-list.html" → "Alarm list"
 function label(name) {
@@ -133,31 +100,6 @@ function subscribe(req, res) {
   res.flushHeaders();
   clients.add(res);
   req.on("close", () => clients.delete(res));
-}
-
-async function serveFile(res, root, path) {
-  const target = path.endsWith("/") ? path + "index.html" : path;
-  const file = resolve(root, "." + target);
-  // Never serve anything outside root, whatever the URL contains.
-  if (!file.startsWith(root + sep)) return reply(res, 404);
-  try {
-    const type = TYPES[extname(file)] ?? "application/octet-stream";
-    reply(res, 200, await readFile(file), type);
-  } catch (err) {
-    if (["ENOENT", "EISDIR", "ENOTDIR"].includes(err.code)) {
-      return reply(res, 404);
-    }
-    throw err;
-  }
-}
-
-async function readBoardData() {
-  try {
-    return JSON.parse(await readFile(BOARD_DATA, "utf8"));
-  } catch (err) {
-    if (err.code === "ENOENT") return structuredClone(DEFAULT_BOARD_DATA);
-    throw err;
-  }
 }
 
 // Through a temporary file, so a crash never leaves half a board.json.

@@ -70,3 +70,43 @@ export function catalogComponent(component) {
   const summary = component.description.split(/(?<=\.)\s/)[0];
   return `- ${component.tag} — ${api.join(", ")} — ${summary}`;
 }
+
+// Global HTML attributes, which mean the same on every element, plus
+// `align`: the one old presentational attribute that browsers still apply to
+// custom elements (it aligns their text). ARIA ones change what assistive
+// technology announces.
+const RESERVED_ATTRIBUTES = [
+  "accesskey",
+  "align",
+  "autocapitalize",
+  "autofocus",
+  "class",
+  "contenteditable",
+  "dir",
+  "draggable",
+  "enterkeyhint",
+  "hidden",
+  "id",
+  "inert",
+  "inputmode",
+  "is",
+  "itemprop",
+  "lang",
+  "nonce",
+  "part",
+  "popover",
+  "role",
+  "slot",
+  "spellcheck",
+  "style",
+  "tabindex",
+  "title",
+  "translate",
+];
+
+export const reservedAttributes = (component) =>
+  component.attributes
+    .map(({ name }) => name)
+    .filter(
+      (name) => RESERVED_ATTRIBUTES.includes(name) || name.startsWith("aria-"),
+    );
