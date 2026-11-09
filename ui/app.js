@@ -2,7 +2,7 @@ import { el } from "./el.js";
 import { newTagId } from "./lib/tags.js";
 import "./sidebar.js";
 
-const PREVIEW_SIZE_KEY = "boardtool:preview-size";
+const COLUMNS_KEY = "boardtool:columns";
 
 const nav = document.querySelector("#pages");
 const grid = document.querySelector("#boards");
@@ -11,7 +11,7 @@ const statusLine = document.querySelector("#status");
 const toolbar = document.querySelector("#toolbar");
 const pageFrame = document.querySelector("#page-frame");
 const filter = document.querySelector("#filter");
-const previewSizes = document.querySelector("#preview-size");
+const columnControls = document.querySelector("#columns");
 const boardTemplate = document.querySelector("#board");
 const frameDialog = document.querySelector("#frame-dialog");
 const boardTagsDialog = document.querySelector("#board-tags-dialog");
@@ -19,12 +19,20 @@ const pageDialog = document.querySelector("#page-dialog");
 const noteDialog = document.querySelector("#note-dialog");
 const tagsDialog = document.querySelector("#tags-dialog");
 
+const search = document.querySelector("#board-search");
+const filterBar = document.querySelector("#filter-bar");
+const filterToggle = document.querySelector("#toggle-filter");
+const inputToggle = document.querySelector("#forward-input");
+let forwardInput = false;
+let filtersVisible = false;
+let preset = null;
+let pageDir;
 let pages = [];
 // board.json: tags, notes and frames, written only through the server.
 let data = { tags: [], pages: {}, boards: {} };
 // Selected tags: a board shows when it has any of them; none shows all.
 const tagFilters = new Set();
-let previewSize = localStorage.getItem(PREVIEW_SIZE_KEY) ?? "large";
+let columns = localStorage.getItem(COLUMNS_KEY) === "3" ? 3 : 2;
 
 // config.json is edited by hand: say what is wrong instead of a blank page.
 const config = await fetch("/__app/config.json")
@@ -117,34 +125,37 @@ function renderNav() {
   nav.replaceChildren(...pages.map(pageLink));
 }
 
-// The wheel scrolls the board inside its preview; at either end it scrolls
-// the index, so a preview never traps the wheel.
+// Keep the wheel inside a board, including at the ends of its content.
 function scrollPreview(event, preview) {
-  const view = preview.contentDocument?.scrollingElement;
-  if (!view || !event.deltaY) return;
-  // scrollTop can be fractional.
-  const atEnd =
-    event.deltaY < 0
-      ? view.scrollTop <= 0
-      : view.scrollHeight - view.clientHeight - view.scrollTop < 1;
-  if (atEnd) return;
+  if (event.ctrlKey) return;
   event.preventDefault();
+  const view = preview.contentDocument?.scrollingElement;
+  if (!view) return;
   const scale = preview.getBoundingClientRect().width / preview.offsetWidth;
-  view.scrollBy({ top: event.deltaY / scale, behavior: "instant" });
+  view.scrollBy({
+    top: event.deltaY / scale,
+    left: event.deltaX / scale,
+    behavior: "instant",
+  });
 }
 
 function boardCard(board, page) {
   const card = boardTemplate.content.firstElementChild.cloneNode(true);
   const meta = data.boards[board.path] ?? {};
-  const frame = meta.frame ?? frameOfPage(page.dir);
+  const frame = preset ?? meta.frame ?? frameOfPage(page.dir);
   card.style.setProperty("--frame-width", frame.width);
   card.style.setProperty("--frame-height", frame.height);
   const preview = card.querySelector("iframe");
+  preview.inert = !forwardInput;
   preview.src = boardUrl(board.path);
   preview.dataset.path = board.path;
   // Without a scrollbar the board is laid out at its full frame width.
   preview.addEventListener("load", () => {
-    preview.contentDocument.documentElement.style.scrollbarWidth = "none";
+    const doc = preview.contentDocument;
+    if (!doc) return;
+    doc.documentElement.style.scrollbarWidth = "none";
+    doc.documentElement.style.overscrollBehavior = "contain";
+    if (doc.body) doc.body.style.overscrollBehavior = "contain";
   });
   card.addEventListener("wheel", (event) => scrollPreview(event, preview), {
     passive: false,
@@ -152,14 +163,17 @@ function boardCard(board, page) {
   const link = card.querySelector("a");
   link.href = boardUrl(board.path);
   link.textContent = board.name;
+  const tags = tagsOf(meta.tags);
+  card.querySelector(".board-tags").hidden = tags.length === 0;
+  card.querySelector(".tag-summary").textContent = tags[0]?.label ?? "";
   card.querySelector(".tags").replaceChildren(
-    ...tagsOf(meta.tags).map((tag) =>
+    ...tags.map((tag) =>
       el("li", { className: "pill", textContent: tag.label }),
     ),
   );
   card.querySelector(".note").textContent = meta.note ?? "";
   const actions = [
-    [".frame-button", "Edit frame of", () => openFrameDialog(board, page)],
+    [".frame-button", "Override frame of", () => openFrameDialog(board, page)],
     [".note-button", "Edit note of", () => openNoteDialog(board)],
     [".tags-button", "Edit tags of", () => openBoardTagsDialog(board)],
   ];
@@ -173,7 +187,17 @@ function boardCard(board, page) {
 
 function renderToolbar(page) {
   const frame = frameOfPage(page.dir);
-  pageFrame.textContent = `Frame ${frame.width} × ${frame.height}`;
+  pageFrame.textContent = `${frame.width} × ${frame.height}`;
+  document.querySelector("#edit-page").ariaPressed = String(!preset);
+  document.querySelector("#breakpoints").replaceChildren(...config.breakpoints.map((item) => {
+    const button = el("button", { type: "button", title: `${item.label} ${item.width} × ${item.height}` });
+    button.ariaLabel = button.title;
+    button.ariaPressed = String(preset === item);
+    button.append(el("span", { className: `icon icon-${item.icon}` }));
+    if (preset === item) button.append(`${item.width} × ${item.height}`);
+    button.addEventListener("click", () => { preset = item; showPage(); });
+    return button;
+  }));
   for (const id of tagFilters) {
     if (!data.tags.some((tag) => tag.id === id)) tagFilters.delete(id);
   }
@@ -209,15 +233,26 @@ function showPage() {
     const isCurrent = decodeURIComponent(link.hash.slice(1)) === page?.dir;
     link.ariaCurrent = isCurrent ? "page" : null;
   }
-  toolbar.hidden = !page;
+  if (pageDir !== page?.dir) preset = null;
+  pageDir = page?.dir;
+  for (const control of toolbar.querySelectorAll("[data-page-tools]")) {
+    control.hidden = !page;
+  }
+  filterToggle.hidden = !page;
+  filterBar.hidden = !page || !filtersVisible;
+  filterToggle.ariaExpanded = String(!filterBar.hidden);
+  filterToggle.ariaPressed = String(!filterBar.hidden);
   if (page) renderToolbar(page);
   const boards = (page?.boards ?? []).filter(
     (board) =>
-      tagFilters.size === 0 ||
-      data.boards[board.path]?.tags?.some((id) => tagFilters.has(id)),
+      !filtersVisible || (
+        board.name.toLowerCase().includes(search.value.trim().toLowerCase()) &&
+        (tagFilters.size === 0 || data.boards[board.path]?.tags?.some((id) => tagFilters.has(id)))
+      ),
   );
   grid.replaceChildren(...boards.map((board) => boardCard(board, page)));
   empty.hidden = (page?.boards.length ?? 0) > 0;
+  document.querySelector("#no-results").hidden = !page?.boards.length || boards.length > 0;
 }
 
 // A dialog saves when closed by its Save button; Esc and Cancel discard.
@@ -233,7 +268,7 @@ function openFrameDialog(board, page) {
   const meta = data.boards[board.path] ?? {};
   const fields = frameDialog.querySelector("form").elements;
   const pageSize = frameOfPage(page.dir);
-  frameDialog.querySelector("h2").textContent = `Frame of ${board.name}`;
+  frameDialog.querySelector("h2").textContent = `Frame override · ${board.name}`;
   fields.width.value = meta.frame?.width ?? "";
   fields.height.value = meta.frame?.height ?? "";
   fields.width.placeholder = pageSize.width;
@@ -258,15 +293,20 @@ function openBoardTagsDialog(board) {
   boardTagsDialog.querySelector("h2").textContent = `Tags of ${board.name}`;
   choices.replaceChildren(
     ...data.tags.map((tag) => {
-      const checked = meta.tags?.includes(tag.id) ?? false;
-      const box = el("input", { type: "checkbox", value: tag.id, checked });
-      return el("label", {}, box, ` ${tag.label}`);
+      const button = el("button", {
+        type: "button", className: "pill", value: tag.id, textContent: tag.label,
+      });
+      button.ariaPressed = String(meta.tags?.includes(tag.id) ?? false);
+      button.addEventListener("click", () => {
+        button.ariaPressed = String(button.ariaPressed !== "true");
+      });
+      return button;
     }),
   );
   openDialog(boardTagsDialog, () =>
     updateEntry(board.path, (entry) => {
-      const boxes = [...choices.querySelectorAll("input:checked")];
-      if (boxes.length) entry.tags = boxes.map((box) => box.value);
+      const selected = [...choices.querySelectorAll('button[aria-pressed="true"]')];
+      if (selected.length) entry.tags = selected.map((button) => button.value);
       else delete entry.tags;
     }),
   );
@@ -296,6 +336,7 @@ function openPageDialog(page) {
       const width = Number(fields.width.value);
       const height = Number(fields.height.value);
       const frame = { width, height };
+      preset = null;
       next.pages[page.dir] = { ...next.pages[page.dir], frame };
     }),
   );
@@ -305,7 +346,9 @@ function tagRow(tag) {
   const name = el("input", { value: tag.label, required: true });
   name.ariaLabel = "Tag name";
   name.dataset.id = tag.id;
-  const remove = el("button", { type: "button", textContent: "Remove" });
+  const remove = el("button", {
+    type: "button", className: "remove-tag", title: "Remove tag", ariaLabel: "Remove tag",
+  }, el("span", { className: "icon icon-trash", ariaHidden: "true" }));
   const row = el("li", {}, name, " ", remove);
   remove.addEventListener("click", () => row.remove());
   return row;
@@ -332,29 +375,29 @@ function openTagsDialog() {
   });
 }
 
-// Previews keep their width while it fits, then shrink with the window.
-// Narrower boards keep their own width (app.css).
 function fitPreviews() {
-  const width = config.previews[previewSize];
-  // 2: the border of the preview.
-  grid.style.setProperty("--card", Math.min(width, grid.clientWidth - 2));
-}
-
-function renderPreviewSize() {
-  for (const button of previewSizes.querySelectorAll("button")) {
-    button.ariaPressed = String(button.value === previewSize);
+  const available = grid.clientWidth;
+  const effective = Math.min(columns, Math.max(1, Math.floor((available + 24) / 304)));
+  const edges = 2;
+  grid.style.setProperty("--columns", effective);
+  grid.style.setProperty("--card", Math.max(1, (available - (effective - 1) * 24) / effective - edges));
+  for (const button of columnControls.querySelectorAll("button")) {
+    button.ariaPressed = String(Number(button.value) === columns);
+    button.title = `${button.value} columns`;
+    if (Number(button.value) === columns && effective !== columns) {
+      button.title += ` (${effective} currently shown)`;
+    }
   }
-  fitPreviews();
 }
 
-previewSizes.addEventListener("click", (event) => {
+columnControls.addEventListener("click", (event) => {
   const button = event.target.closest("button");
   if (!button) return;
-  previewSize = button.value;
-  localStorage.setItem(PREVIEW_SIZE_KEY, previewSize);
-  renderPreviewSize();
+  columns = Number(button.value);
+  localStorage.setItem(COLUMNS_KEY, columns);
+  fitPreviews();
 });
-renderPreviewSize();
+fitPreviews();
 new ResizeObserver(fitPreviews).observe(grid);
 
 tagsDialog.querySelector(".add-tag").addEventListener("click", () => {
@@ -409,3 +452,34 @@ events.addEventListener("ds", () => {
   for (const frame of grid.querySelectorAll("iframe")) reload(frame);
 });
 window.addEventListener("hashchange", showPage);
+
+search.addEventListener("input", showPage);
+filterToggle.addEventListener("click", () => {
+  filtersVisible = !filtersVisible;
+  showPage();
+});
+for (const dialog of document.querySelectorAll("dialog")) {
+  let startedOutside = false;
+  const outside = (event) => {
+    const rect = dialog.getBoundingClientRect();
+    return event.clientX < rect.left || event.clientX > rect.right ||
+      event.clientY < rect.top || event.clientY > rect.bottom;
+  };
+  dialog.addEventListener("pointerdown", (event) => {
+    startedOutside = event.target === dialog && outside(event);
+  });
+  dialog.addEventListener("pointerup", (event) => {
+    if (startedOutside && event.target === dialog && outside(event)) dialog.close("cancel");
+    startedOutside = false;
+  });
+  dialog.querySelector('[value="cancel"]').addEventListener("click", () => dialog.close("cancel"));
+}
+
+inputToggle.addEventListener("click", () => {
+  forwardInput = !forwardInput;
+  inputToggle.ariaPressed = String(forwardInput);
+  document.body.classList.toggle("forward-input", forwardInput);
+  for (const preview of grid.querySelectorAll("iframe")) {
+    preview.inert = !forwardInput;
+  }
+});

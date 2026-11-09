@@ -44,7 +44,14 @@ export async function readConfig() {
   if (!config) {
     throw new Error(`No config.json: run ${toolCommand("init.js")}`);
   }
-  return { ...(await readDefaults()), ...config };
+  const merged = { ...(await readDefaults()), ...config };
+  if (!Array.isArray(merged.breakpoints) || merged.breakpoints.some((item) =>
+    !item || typeof item.label !== "string" || !item.label.trim() ||
+    !["desktop", "tablet", "mobile", "frame"].includes(item.icon) ||
+    !Number.isInteger(item.width) || item.width <= 0 ||
+    !Number.isInteger(item.height) || item.height <= 0
+  )) throw new Error("Invalid breakpoints in config.json");
+  return merged;
 }
 
 export async function writeConfig(config) {

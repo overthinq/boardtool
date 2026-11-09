@@ -10,6 +10,8 @@ const API_SECTIONS = {
 };
 
 const nav = document.querySelector("#components");
+const search = document.querySelector("#component-search");
+const noResults = document.querySelector("#no-results");
 const article = document.querySelector("#component");
 const empty = document.querySelector("#empty");
 
@@ -24,6 +26,7 @@ function exampleDocument(html) {
   doc.querySelector("main").innerHTML = html;
   // Room for the example's edges and shadows, which a board would show.
   doc.body.style.padding = "16px";
+  doc.documentElement.style.overflow = "clip";
   return `<!doctype html>\n${doc.documentElement.outerHTML}`;
 }
 
@@ -39,7 +42,8 @@ function example(language, source) {
     // scrollHeight never drops below the frame height: measure the box.
     new ResizeObserver(() => {
       const height = Math.ceil(root.getBoundingClientRect().height);
-      frame.style.height = `${height}px`;
+      // The border-box frame includes its top border.
+      frame.style.height = `${height + 1}px`;
     }).observe(root);
   });
   return [frame, el("pre", {}, el("code", { textContent: source }))];
@@ -116,8 +120,21 @@ async function load() {
       return el("li", {}, el("a", { href, textContent: id }));
     }),
   );
+  filterComponents();
   showComponent();
 }
+
+function filterComponents() {
+  const query = search.value.trim().toLowerCase();
+  let matches = 0;
+  for (const item of nav.children) {
+    item.hidden = !item.textContent.toLowerCase().includes(query);
+    if (!item.hidden) matches++;
+  }
+  noResults.hidden = matches > 0 || components.length === 0;
+}
+
+search.addEventListener("input", filterComponents);
 
 const events = new EventSource("/__api/events");
 // Runs on the first connection and after every reconnection.

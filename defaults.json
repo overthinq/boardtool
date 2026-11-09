@@ -1,6 +1,35 @@
 {
   "project": "prototype",
-  "frame": { "width": 1440, "height": 900 },
-  "previews": { "small": 320, "large": 800 },
-  "tags": ["Desktop", "Mobile", "Draft", "Variant", "Temp", "Delete"]
+  "frame": {
+    "width": 1440,
+    "height": 900
+  },
+  "tags": [
+    "Desktop",
+    "Mobile",
+    "Draft",
+    "Variant",
+    "Temp",
+    "Delete"
+  ],
+  "breakpoints": [
+    {
+      "label": "Desktop",
+      "icon": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "label": "Tablet",
+      "icon": "tablet",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "label": "Mobile",
+      "icon": "mobile",
+      "width": 390,
+      "height": 844
+    }
+  ]
 }

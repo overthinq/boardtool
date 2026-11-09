@@ -2,7 +2,7 @@
 
 A prototyping environment where an AI agent works only on a design system, its components and HTML boards, while a separate tool, which the agent never sees, provides navigation and an overview of the whole app. Prototypes are made of the same material as the final product, at a fraction of the token cost of an agent reading a canvas.
 
-**Status:** 0.4.1. `init.js` creates a project next to the tool, with an optional demo, and `reset.js` starts it over. Pages and live board previews in the browser, small or large and scrollable, with notes, tags and frame sizes; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. A lint checks boards, components and their stylesheets against the design system rules, and the agent can screenshot a board to see what it built.
+**Status:** 0.5.0. `init.js` creates a project next to the tool, with an optional demo, and `reset.js` starts it over. Pages and live board previews in the browser, arranged in two or three responsive columns and scrollable, with configurable viewport presets, native preview interaction, title search, tag filters, notes and frame overrides; DTCG tokens generate `tokens.css` and the catalog. Two design system pages: tokens, with alias chains, usages and text contrast; components, with guidelines, API from JSDoc and live examples. A lint checks boards, components and their stylesheets against the design system rules, and the agent can screenshot a board to see what it built.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ No `npm install`, no build step. Tested on Linux (Fedora) with Node 22, Chrome a
 | Path | Content |
 | --- | --- |
 | `boardtool/` | The tool: server, lint, screenshots, `init.js` and `reset.js`, `lib/` shared with the browser, `ui/`, `setup/` with the terminal questions, the project template and the demo |
-| `boardtool/config.json` | Written by `init.js`, ignored by git, editable: `project`, the project folder, a name next to `boardtool/` or a path; `frame`, the board size until a page or board has its own; `previews`, the maximum width in px of small and large previews in the index (narrower boards keep their own width); `tags`, the tag names of a new project. Missing keys take the value in `defaults.json` |
+| `boardtool/config.json` | Written by `init.js`, ignored by git, editable: `project`, the project folder, a name next to `boardtool/` or a path; `frame`, the board size until a page or board has its own; `tags`, the tag names of a new project. Missing keys take the value in `defaults.json` |
 | `prototype/` | The work of one project: server root and folder where prototyping sessions start |
 | `prototype/AGENTS.md`, `ds/AGENTS.md`, `boards/AGENTS.md` | Rules for the agent. Above the marker line they are written by the tool; add your own below it |
 | `prototype/board.json` | Notes, tags and frame sizes of the boards; written by the tool. Tied to each board's path: a board moved or renamed by hand loses them |
@@ -62,3 +62,5 @@ HTML boards in a folder, shown in iframes and refreshed by a watcher, already ex
 - **Accessibility built in.** Contrast checked on semantic pairs; lint on non-native interactive elements, images without `alt`, unlabeled fields.
 - **The prototype is product material.** Tokens and components are standard code that can move into the product.
 - **Agent-agnostic.** Rules are Markdown files and the lint is a command.
+
+`breakpoints` in config.json is an ordered array of `{ "label": "Desktop", "icon": "desktop", "width": 1440, "height": 900 }`. Supported icons: desktop, tablet, mobile, frame. An empty array hides presets. Presets temporarily override all previews until the page changes or reloads; Custom saves the page frame and restores individual board overrides.

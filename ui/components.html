@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Components · BoardTool</title>
+  <link rel="icon" type="image/png" href="/__app/boardtool-fav.png">
   <link rel="stylesheet" href="/__app/app.css">
   <script type="module" src="/__app/components.js"></script>
 </head>
@@ -11,6 +12,8 @@
   <nav aria-label="Components">
     <a href="/__app/">← Boards</a>
     <hr>
+    <input id="component-search" type="search" aria-label="Search components" placeholder="Search components">
+    <p id="no-results" hidden>No matching components.</p>
     <ul id="components"></ul>
   </nav>
   <main>

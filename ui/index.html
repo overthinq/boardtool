@@ -4,10 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BoardTool</title>
+  <link rel="icon" type="image/png" href="/__app/boardtool-fav.png">
   <link rel="stylesheet" href="/__app/app.css">
   <script type="module" src="/__app/app.js"></script>
 </head>
-<body>
+<body class="dashboard">
   <nav aria-label="BoardTool">
     <a href="/__app/tokens.html">Tokens</a>
     <a href="/__app/components.html">Components</a>
@@ -16,29 +17,52 @@
   </nav>
   <main>
     <p id="status" role="alert" hidden></p>
-    <div id="toolbar" hidden>
-      <span id="page-frame"></span>
-      <button type="button" id="edit-page" class="icon-button" aria-label="Edit page frame" title="Edit page frame"><span class="icon icon-frame"></span></button>
-      <div id="filter" role="group" aria-label="Filter by tag"></div>
-      <button type="button" id="edit-tags" class="icon-button" aria-label="Manage tags" title="Manage tags"><span class="icon icon-tags"></span></button>
-      <div id="preview-size" role="group" aria-label="Preview size">
-        <button type="button" value="small" class="icon-button" aria-label="Small previews" title="Small previews"><span class="icon icon-grid-3x3"></span></button>
-        <button type="button" value="large" class="icon-button" aria-label="Large previews" title="Large previews"><span class="icon icon-grid-2x2"></span></button>
+    <div id="toolbar">
+      <div id="toolbar-navigation">
+        <button type="button" id="toggle-filter" aria-expanded="false" aria-pressed="false" aria-controls="filter-bar"><span class="icon icon-sliders-horizontal" aria-hidden="true"></span>Filter</button>
+        <button type="button" id="forward-input" aria-pressed="false" title="Interact directly with board previews"><span class="icon icon-pointer" aria-hidden="true"></span>Forward</button>
+      </div>
+      <div class="toolbar-group" data-page-tools role="group" aria-label="Frame size">
+        <span class="tool-label">Frame</span>
+        <button type="button" id="edit-page" class="icon-button" aria-label="Edit page frame" title="Edit page frame"><span class="icon icon-frame"></span><span id="page-frame"></span></button>
+        <div id="breakpoints" role="group" aria-label="Viewport presets"></div>
+      </div>
+      <div class="toolbar-group" data-page-tools role="group" aria-label="Columns">
+        <span class="tool-label">Columns</span>
+        <div id="columns" role="group" aria-label="Columns">
+          <button type="button" value="3" class="icon-button" aria-label="3 columns" title="3 columns"><span class="icon icon-grid-3x3"></span>3</button>
+          <button type="button" value="2" class="icon-button" aria-label="2 columns" title="2 columns"><span class="icon icon-grid-2x2"></span>2</button>
+        </div>
       </div>
     </div>
+    <div id="filter-bar" hidden>
+      <input id="board-search" type="search" aria-label="Search boards" placeholder="Search boards">
+      <div class="tag-tools" role="group" aria-label="Tag filtering">
+        <div id="filter" role="group" aria-label="Filter by tag"></div>
+        <button type="button" id="edit-tags" title="Manage tags"><span class="icon icon-tags" aria-hidden="true"></span>Edit tags</button>
+      </div>
+    </div>
+    <p id="no-results" hidden>No matching boards.</p>
     <p id="empty" hidden>No boards yet. Add HTML files to <code>boards/&lt;page&gt;/</code>.</p>
     <ul id="boards"></ul>
   </main>
   <template id="board">
     <li class="board">
-      <div class="preview"><iframe loading="lazy" inert></iframe></div>
-      <a></a>
-      <ul class="tags"></ul>
-      <p class="note"></p>
+      <div class="board-heading">
+        <a></a>
+        <div class="board-tags" tabindex="0" aria-label="Board tags" hidden>
+          <span class="tag-summary" aria-hidden="true"></span>
+          <ul class="tags"></ul>
+        </div>
+      </div>
       <div class="board-actions">
-        <button type="button" class="icon-button frame-button" title="Edit frame"><span class="icon icon-pencil"></span></button>
         <button type="button" class="icon-button note-button" title="Edit note"><span class="icon icon-sticky-note"></span></button>
         <button type="button" class="icon-button tags-button" title="Edit tags"><span class="icon icon-tag"></span></button>
+        <button type="button" class="icon-button frame-button" title="Override frame"><span class="icon icon-frame"></span></button>
+      </div>
+      <div class="board-body">
+        <p class="note"></p>
+        <div class="preview"><iframe loading="lazy" inert></iframe></div>
       </div>
     </li>
   </template>
@@ -47,9 +71,9 @@
       <h2></h2>
       <label>Width <input name="width" type="number" min="1" step="1"></label>
       <label>Height <input name="height" type="number" min="1" step="1"></label>
-      <p class="hint">Empty fields use the page frame.</p>
+      <p class="hint">Override the page frame for this board only. Empty fields inherit the page dimensions; clear both to remove the override.</p>
       <div class="actions">
-        <button value="cancel" formnovalidate>Cancel</button>
+        <button type="button" value="cancel">Cancel</button>
         <button value="save">Save</button>
       </div>
     </form>
@@ -59,7 +83,7 @@
       <h2></h2>
       <div class="tag-choices"></div>
       <div class="actions">
-        <button value="cancel" formnovalidate>Cancel</button>
+        <button type="button" value="cancel">Cancel</button>
         <button value="save">Save</button>
       </div>
     </form>
@@ -70,7 +94,7 @@
       <label>Width <input name="width" type="number" min="1" step="1" required></label>
       <label>Height <input name="height" type="number" min="1" step="1" required></label>
       <div class="actions">
-        <button value="cancel" formnovalidate>Cancel</button>
+        <button type="button" value="cancel">Cancel</button>
         <button value="save">Save</button>
       </div>
     </form>
@@ -81,7 +105,7 @@
       <label>Note <textarea name="note" rows="6"></textarea></label>
       <p class="hint">The agent reads it before editing the board.</p>
       <div class="actions">
-        <button value="cancel" formnovalidate>Cancel</button>
+        <button type="button" value="cancel">Cancel</button>
         <button value="save">Save</button>
       </div>
     </form>
@@ -90,9 +114,9 @@
     <form method="dialog">
       <h2>Tags</h2>
       <ul class="tag-list"></ul>
-      <button type="button" class="add-tag">Add tag</button>
+      <button type="button" class="add-tag"><span class="icon icon-plus" aria-hidden="true"></span>Add tag</button>
       <div class="actions">
-        <button value="cancel" formnovalidate>Cancel</button>
+        <button type="button" value="cancel">Cancel</button>
         <button value="save">Save</button>
       </div>
     </form>

@@ -25,5 +25,5 @@ toggle.addEventListener("click", () => {
   localStorage.setItem(KEY, isHidden ? "hidden" : "shown");
   render(isHidden);
 });
-document.querySelector("main").prepend(toggle);
+(document.querySelector("#toolbar-navigation") ?? document.querySelector("main")).prepend(toggle);
 render(localStorage.getItem(KEY) === "hidden");
